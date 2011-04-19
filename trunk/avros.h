@@ -197,8 +197,8 @@
  test winxp cmdline: mode com1: baud=9600 data=8 stop=1 parity=n
 
  */
-#ifndef os_h
-#define os_h
+#if !defined(avros_h)
+#define avros_h
 
 
 //extern "C" void __cxa_pure_virtual() {}
