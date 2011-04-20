@@ -33,7 +33,7 @@ void loop()
     switch (cmd) {
     case 0 :
         break;
-    case '.':
+    case '.': // press . to start-stop your program
         pinMode(13, OUTPUT);
         digitalWrite(13, stop ? HIGH : LOW);
         stop = !stop;
