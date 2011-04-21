@@ -8,72 +8,86 @@
  - enable by pin automatc execution from eprom
  -
 
+ examples:
+
+ simple led on: 13 pin = n 
+ send: mn1 wn1	
+ or pin numbering variant2: 13 pin = D
+ send: mD1wD1	
+
+        mode write, on led, wait, off led, wait, on led:
+        pin n = 13          1 sec
+ send:	mn1         wn1     d1000 wn0      d1000 wn1
+ 
+ monitor analog0 step 10 (pin 14 = o = E)
+ send: mo0 Mo10
+
+
+ test eprom src - on wait off pin 13 (led) send:
+ send: E o mn1 wn1 d1000 wn0 d1000 O S E s
+ .     \--prog-----------------------+-/ |
+ .                                   |    \run
+ .                                    \only once, remove to blink forever
+
+
 
  Serial protocol description:
 
  values:
- P - coded pin [0-9A-L] or [a-z]
+ P - coded pin [0-9A-LM-Z] or [a-z]
  B - binary 0 or 1 or '0' or '1'
  V - numeric value { or binary for '0'-'9' started from \x00 }-todo
 
  commands: [command byte][pin byte][value?]
- mPB	pinMode(pin, mode) mode: either INPUT=0 or OUTPUT=1.
+ all functions always return pins in variant2 [a-vw-z]
+ // todo binary return or variant1
 
- rP	int digitalRead(pin) Returns Either HIGH=1 or LOW=0
- answer: rPB
-
- wPB	digitalWrite(pin, value) value: HIGH=1 or LOW=0
-
- RP	int analogRead(pin) values go from 0 to 1023
- answer: RPV
-
- WPV	analogWrite(pin, value) - PWM  values from 0 to 255
-
- pP	pulseIn(pin, HIGH);
-
- PPv	pulseOut - dirty emulation
-
-
+ a
+ b
+ c
  dV	delay(ms)
-
  DV	delayMicroseconds(us)
-
+ e	eprom print
+ E<DATA>E	write data to eprom while !=E or 512 bytes E<DATA512bytes>
+ 	answer: e<DATA>E
+ f
+ g
+ h
+ i
+ j
+ k
+ l	// test lamp example
+ mPB	pinMode(pin, mode) mode: either INPUT=0 or OUTPUT=1.
  MPV	monitor  changes [with min step] V=0 - off bin V=1 - on analog: V=1-1024
- answer: rPB
- answer: RPV
-
- e	print eprom (512 bytes)
- answer: e<DATA>E
-
- E<DATA>E	write data while !=E or 512 bytes E<DATA512bytes>
-
- s	set cmd src to eprom
-
- S	set cmd src to serial
-
+ 	answer: rPB 
+ 	answer: RPV
+ n
  o	ignore src pin
-
  O	unignore src pin
+ pP	pulseIn(pin, HIGH);
+ PPv	pulseOut - dirty emulation
+ q
+ rP	int digitalRead(pin) Returns Either HIGH=1 or LOW=0
+ 	answer: rPB
+ RP	int analogRead(pin) values go from 0 to 1023
+  	answer: RPV
+ s	set cmd src to eprom
+ S	set cmd src to serial
+ t
+ u
+ v
+ wPB	digitalWrite(pin, value) value: HIGH=1 or LOW=0
+ WPV	analogWrite(pin, value) - PWM  values from 0 to 255
+ x
+ y	servo attach    to use #define SERVO	 
+ z	servo read
+ Z	servo write
 
 
- examples:
- send:	m31w31RE
- recv:	Ro100
-
- send:
- mn1wn1	- led on  13 pin = n
- mD1wD1	- led on  13 pin = D  pin   numbering variant2
-
- mo0Mo10	-monitor analog0 step 10 (pin 14 = o = E)
+ you can split multiplie commands by space, \n or tab, or input without spaces
 
 
- test eprom src - on wait off pin 13 (led)
- E o mn1 wn1 d1000 wn0 d1000 O S E s
- \--prog-----------------------+-/ |
- .                             |    \run
- .                              \only once, remove to blink forever
-
- Arduino Duemilanove pins numbering:
+ Arduino pins numbering:
  n	v1	v2	Duemilanove	 Mega
  0	0	a	RX               RX
  1	1	b	TX               TX
@@ -102,7 +116,7 @@
  23	N       x                        -/-
  24	O       y
  25	P       z
- 26	Q
+ 26	Q       
  27 	R
  28	S
  29	T
@@ -151,38 +165,6 @@
 
  variant3 : binary byte // not tested
 
- all functions always return variant2 a-v
- // todo binary return or variant1
-
- a
- b
- c
- d delay
- e eprom
- f
- g
- h
- i
- j
- k
- l // test lamp example
- m mode
- M monitor
- n
- o ignore src pin
- p pulse read
- q
- r digital read
- R analog read
- s cmd src
- t
- u
- v
- w write
- x
- y servo attach
- z servo read
- Z servo write
 
 
 
@@ -192,6 +174,9 @@
  todo:
  interrupts() noInterrupts()
  finish binary values
+ mega alt pin numbering
+ multibyte pin input [W12,100]
+ execute commands from string
 
 
  test winxp cmdline: mode com1: baud=9600 data=8 stop=1 parity=n
@@ -206,12 +191,12 @@
 
 
 #if !defined(SPEED)
-#define SPEED 9600
-//#define SPEED 115200 // 300, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200,
+//#define SPEED 9600
+#define SPEED 115200 // 300, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200,
 #endif
 
-#if !defined(EPROM_SIZE)
-#define EPROM_SIZE 512
+#if !defined(EPROM)
+#define EPROM 512
 #endif
 
 #if !defined(PIN_LAST)
@@ -229,12 +214,15 @@
 #define PIN_ANALOG_FROM A0 //auto from WProgram.h
 
 #endif
+
 //#define PIN_SRC 2  //execute from eprom if pin HIGH=1 // pin MUST be connected to gnd(0) or +(1)
+
 #if !defined(REPORT)
 #define REPORT 1 //print to serial about command executions
 #endif
+
 //#define DEBUG
-//#define DELAY 100
+//#define DELAY 100 // auto delay if nothing to do
 
 #if !defined(READ_TIMEOUT)
 #define READ_TIMEOUT 100 //for typing from console set to 500-1000, for scripts - 1-50
@@ -244,19 +232,22 @@
 #define READ_TIMEOUT_FIRST 0
 #endif
 
-//#define BINARY // TODO NOT FINISHED
 #if !defined(AUTO_MONITOR)
 #define AUTO_MONITOR 1
 #endif
 
+//#define BINARY // TODO NOT FINISHED
+
 
 #include "WProgram.h"
-#include "EEPROM.h"
 
-#if defined(SERVO)
+#if EPROM
+#include "EEPROM.h"
+#endif
+
+#if SERVO
 #include "Servo.h"
-//Servo  servo2, servo1;
-Servo servo[SERVO]/*, servo1*/;
+Servo servo[SERVO];
 char servon[PIN_LAST];
 char servolast = 0;
 //Servo *  servos[PIN_LAST] = {};
@@ -290,7 +281,7 @@ void sp_setup()
 #if defined(PIN_SRC)
     monitor_pin[PIN_SRC] = 1;
 #endif
-#if defined(REPORT)
+#if REPORT
     Serial.println("I");
 #endif
 }
@@ -311,7 +302,7 @@ void monitor()
                 Serial.println(now, DEC);
 #if defined(PIN_SRC)
                 if (read_src_pin and i            == PIN_SRC) {
-#if defined(REPORT)
+#if REPORT
                     Serial.print("$");
                     Serial.print('0' + read_src, BYTE);
                     Serial.println('0' + now  , BYTE);
@@ -338,7 +329,7 @@ int read_chr(int timeout = READ_TIMEOUT)//wait one second max
     unsigned long  runtime = millis();
     if (read_src == 0) {
         while (!Serial.available() and millis() - timeout < runtime) {
-#if defined(DELAY)
+#if DELAY
             delay(DELAY);
 #endif
             monitor();
@@ -346,14 +337,16 @@ int read_chr(int timeout = READ_TIMEOUT)//wait one second max
         if (Serial.available()) {
             return Serial.read();
         }
+#if EPROM
     } else {
-        if (read_eprom > EPROM_SIZE    )  read_eprom = 0;
+        if (read_eprom > EPROM    )  read_eprom = 0;
         byte   r = EEPROM.read(read_eprom++);
         if (r == 'E') {
             read_eprom = 0;
             return 0;
         }
         return r;
+#endif
     }
     return -1;
 }
@@ -399,6 +392,7 @@ void pulseOut(int pin, int us)
     digitalWrite(pin, LOW);
 }
 
+#if SERVO
 byte servo_attach(byte pin)
 {
 
@@ -411,6 +405,7 @@ byte servo_attach(byte pin)
     servo[servon[pin]].attach(pin);
     return servon[pin];
 }
+#endif
 
 int cmd_parse(int cmd)
 {
@@ -419,18 +414,18 @@ int cmd_parse(int cmd)
     unsigned long value_ul = 0;
     switch (cmd) {
     case -1:
-#if defined(DELAY)
+#if DELAY
         delay(DELAY);
 #endif
         break;
     case 'w':
         pin = char2pin(read_chr());
         value = char2bin(read_chr());
-#if defined(AUTO_MONITOR)
+#if AUTO_MONITOR
         pinMode(pin, OUTPUT);
 #endif
         digitalWrite(pin, value);
-#if defined(REPORT)
+#if REPORT
         Serial.print("w");
         Serial.print('a' + pin, BYTE);
         Serial.println(value);
@@ -441,7 +436,7 @@ int cmd_parse(int cmd)
         value = read_num(3);
         //pinMode(pin, OUTPUT);
         analogWrite(pin, value);
-#if defined(REPORT)
+#if REPORT
         Serial.print("W");
         Serial.print('a' + pin, BYTE);
         Serial.println(value);
@@ -449,7 +444,7 @@ int cmd_parse(int cmd)
     case 'r':
         pin = char2pin(read_chr());
         //pinMode(pin, INPUT);
-#if defined(AUTO_MONITOR)
+#if AUTO_MONITOR
         pinMode(pin, INPUT);
 #endif
         Serial.print("r");
@@ -469,7 +464,7 @@ int cmd_parse(int cmd)
         pin = char2pin(read_chr());
         value = char2bin(read_chr());
         pinMode(pin, value);
-#if defined(REPORT)
+#if REPORT
         Serial.print("m");
         Serial.print('a' + pin, BYTE);
         Serial.println(value);
@@ -478,14 +473,14 @@ int cmd_parse(int cmd)
     case 'd':
         value = read_num();
         delay(value);
-#if defined(REPORT)
+#if REPORT
         Serial.println("d");
 #endif
         break;
     case 'D':
         value = read_num();
         delayMicroseconds(value);
-#if defined(REPORT)
+#if REPORT
         Serial.println("D");
 #endif
         break;
@@ -493,15 +488,16 @@ int cmd_parse(int cmd)
         pin = char2pin(read_chr());
         value = read_num(4);
         monitor_pin[pin] = value;
-#if defined(REPORT)
+#if REPORT
         Serial.print("M");
         Serial.print('a' + pin, BYTE);
         Serial.println(value, DEC);
 #endif
         break;
+#if EPROM
     case  'e':
         Serial.println("e");
-        for (int address = 0; address < EPROM_SIZE; ++address) {
+        for (int address = 0; address < EPROM; ++address) {
 #if defined(BINARY)
             Serial.print(EEPROM.read(address));
 #else
@@ -514,7 +510,7 @@ int cmd_parse(int cmd)
         Serial.println("E");
         break;
     case 'E':
-        for (int address = 0; address < EPROM_SIZE; ++address) {
+        for (int address = 0; address < EPROM; ++address) {
             int    r = read_chr();
             //!!!remove 0 for binarydata
             if (r <= 0 )
@@ -524,34 +520,35 @@ int cmd_parse(int cmd)
                 break;
             }
         }
-#if defined(REPORT)
+#if REPORT
         Serial.println("E");
 #endif
         read_eprom = 0;
         break;
+#endif
     case 's':
         read_src = read_src_want = 1;
         //read_eprom = 0;
-#if defined(REPORT)
+#if REPORT
         Serial.println("s");
 #endif
         break;
     case 'S':
         read_src =   read_src_want = 0;
-#if defined(REPORT)
+#if REPORT
         Serial.println("S");
 #endif
         break;
 #if defined(PIN_SRC)
     case 'o':
         read_src_pin = 0;
-#if defined(REPORT)
+#if REPORT
         Serial.println("o");
 #endif
         break;
     case 'O':
         read_src_pin = 1;
-#if defined(REPORT)
+#if REPORT
         Serial.println("O");
 #endif
         break;
@@ -565,14 +562,14 @@ int cmd_parse(int cmd)
     case 'l':
         pinMode(13, OUTPUT);
         digitalWrite(13, HIGH);
-#if defined(REPORT)
+#if REPORT
         Serial.println("l");
 #endif
         break;
     case 'L':
         pinMode(13, OUTPUT);
         digitalWrite(13, LOW);
-#if defined(REPORT)
+#if REPORT
         Serial.println("L");
 #endif
         break;
@@ -581,7 +578,7 @@ int cmd_parse(int cmd)
     case 'p':
         pin = char2pin(read_chr());
         //pinMode(pin, INPUT);
-#if defined(AUTO_MONITOR)
+#if AUTO_MONITOR
         pinMode(pin, INPUT);
 #endif
         Serial.print("p");
@@ -598,11 +595,11 @@ int cmd_parse(int cmd)
         pin = char2pin(read_chr());
         value = read_num(4);
         //pinMode(pin, INPUT);
-#if defined(AUTO_MONITOR)
+#if AUTO_MONITOR
         pinMode(pin, OUTPUT);
 #endif
         pulseOut(pin, value);
-#if defined(REPORT)
+#if REPORT
         Serial.print("P");
         Serial.print('a' + pin, BYTE);
         Serial.println(value);
@@ -617,7 +614,7 @@ int cmd_parse(int cmd)
 
 
 
-#if defined(SERVO)
+#if SERVO
     case 'Z':
         pin = char2pin(read_chr());
         servo_attach(pin);
@@ -626,7 +623,7 @@ int cmd_parse(int cmd)
          		servos[pin] = &servo;
          		servos[pin]->attach(pin);
          	}*/
-#if defined(REPORT)
+#if REPORT
         Serial.print("Z");
 
         Serial.print('a' + pin, BYTE);
@@ -635,17 +632,6 @@ int cmd_parse(int cmd)
         //    Serial.println(servos[pin]->attached(), DEC);
 #endif
         break;
-        /*
-         case 'z':
-         pin = char2pin(read_chr());
-         #if defined(REPORT)
-         Serial.print("z");
-         Serial.print('a' + pin, BYTE);
-         Serial.println(servo[servon[pin]].read(), DEC);
-         //    Serial.println(servos[pin]->read(), DEC);
-         #endif
-         break;
-         */
 
     case 'z':
         pin = char2pin(read_chr());
@@ -653,7 +639,7 @@ int cmd_parse(int cmd)
         //    value = char2bin(read_chr());
         servo[servon[pin]].write(value);
         //    servos[pin]->write(value);
-#if defined(REPORT)
+#if REPORT
         Serial.print("z");
         //    Serial.print(servon[pin], DEC);
         Serial.print('a' + pin, BYTE);
@@ -662,38 +648,6 @@ int cmd_parse(int cmd)
         //    Serial.println(servos[pin]->read(), DEC);
 #endif
         break;
-        /*
-
-          case 'X':
-
-            pin = char2pin(read_chr());
-            pinMode(pin, OUTPUT);
-            if(servo1.attached()) {
-              servo1.detach();
-            }
-            servo1.attach(pin);
-        #if defined(REPORT)
-            Serial.print("X");
-            Serial.print('a' + pin, BYTE);
-            Serial.println(servo1.attached(), DEC);
-            //    Serial.println(servos[pin]->attached(), DEC);
-        #endif
-            break;
-          case 'x':
-            pin = char2pin(read_chr());
-            value = read_num(3);
-            //    value = char2bin(read_chr());
-            servo1.write(value);
-            //    servos[pin]->write(value);
-        #if defined(REPORT)
-            Serial.print("x");
-            Serial.print('a' + pin, BYTE);
-            Serial.println(servo1.read(), DEC);
-            //    Serial.println(servos[pin]->read(), DEC);
-        #endif
-            break;
-        */
-
 #endif
 
 
@@ -704,6 +658,16 @@ int cmd_parse(int cmd)
     }
     return 0;
 }
+
+/* todo
+
+int run_string(char * s) {
+	read_src =   read_src_want = 2;
+        read_string = s;
+	cmd_parse( read_chr());
+}
+
+*/
 
 
 int sp_loop()
@@ -718,13 +682,6 @@ int sp_loop()
     return cmd_parse( read_chr(READ_TIMEOUT_FIRST));
 }
 
-
-
-/*
-
- mn1 wn1 d1000 wn0 d1000 wn1
-
- */
 
 #endif
 

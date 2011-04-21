@@ -37,6 +37,16 @@
 TARGET = $(notdir $(CURDIR))
 #INSTALL_DIR = $(HOME)/arduino-0022
 INSTALL_DIR = /usr/local/arduino
+#INSTALL_DIR = c\:/Program\ Files/arduino
+#INSTALL_DIR = c\:/arduino
+#INSTALL_DIR = c\:/PROGRA~1/ARDUINO
+#INSTALL_DIR = /cygdrive/c/Program\ Files/arduino
+#INSTALL_DIR = /cygdrive/c/PROGRA~1/arduino
+
+#AVR_TOOLS_PATH = $(INSTALL_DIR)/hardware/tools/avr/bin
+AVR_TOOLS_PATH = /usr/bin
+
+
 PORT = /dev/ttyUSB*
 UPLOAD_RATE = 57600
 AVRDUDE_PROGRAMMER = stk500v1
@@ -50,8 +60,6 @@ F_CPU = 16000000
 VERSION=22
 ARDUINO = $(INSTALL_DIR)/hardware/arduino/cores/arduino
 ARDUINO_LIB = $(INSTALL_DIR)/libraries
-#AVR_TOOLS_PATH = $(INSTALL_DIR)/hardware/tools/avr/bin
-AVR_TOOLS_PATH = /usr/bin
 AVRDUDE_PATH = $(INSTALL_DIR)/hardware/tools
 C_MODULES =  \
 $(ARDUINO)/wiring_pulse.c \
@@ -179,6 +187,7 @@ applet/$(TARGET).cpp: $(TARGET).pde
 #	echo 'void setup();' >> applet/$(TARGET).cpp
 #	echo 'void loop();' >> applet/$(TARGET).cpp
 	cat $(TARGET).pde >> applet/$(TARGET).cpp
+	cp *.h applet/
 
 elf: applet/$(TARGET).elf
 hex: applet/$(TARGET).hex
