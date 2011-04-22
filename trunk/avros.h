@@ -65,7 +65,7 @@
  o	ignore src pin
  O	unignore src pin
  pP	pulseIn(pin, HIGH);
- PPv	pulseOut - dirty emulation
+ PPV	pulseOut - dirty emulation
  q
  rP	int digitalRead(pin) Returns Either HIGH=1 or LOW=0
  	answer: rPB
@@ -79,9 +79,9 @@
  wPB	digitalWrite(pin, value) value: HIGH=1 or LOW=0
  WPV	analogWrite(pin, value) - PWM  values from 0 to 255
  x
- y	servo attach    to use #define SERVO	 
- z	servo read
- Z	servo write
+ yP	servo attach    to use #define SERVO	 
+ zP	servo read
+ ZPV	servo write
 
 
  you can split multiplie commands by space, \n or tab, or input without spaces
