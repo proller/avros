@@ -36,28 +36,29 @@
 
 TARGET = $(notdir $(CURDIR))
 #INSTALL_DIR = $(HOME)/arduino-0022
-INSTALL_DIR = /usr/local/arduino
-#INSTALL_DIR = c\:/Program\ Files/arduino
-#INSTALL_DIR = c\:/arduino
-#INSTALL_DIR = c\:/PROGRA~1/ARDUINO
-#INSTALL_DIR = /cygdrive/c/Program\ Files/arduino
-#INSTALL_DIR = /cygdrive/c/PROGRA~1/arduino
+INSTALL_DIR ?= /usr/local/arduino
+#INSTALL_DIR ?= c\:/Program\ Files/arduino
+#INSTALL_DIR ?= C\:/Program\ Files/\(x86\)/arduino
+#INSTALL_DIR ?= c\:/arduino
+#INSTALL_DIR ?= c\:/PROGRA~1/ARDUINO
+#INSTALL_DIR ?= /cygdrive/c/Program\ Files/arduino
+#INSTALL_DIR ?= /cygdrive/c/PROGRA~1/arduino
 
-#AVR_TOOLS_PATH = $(INSTALL_DIR)/hardware/tools/avr/bin
-AVR_TOOLS_PATH = /usr/bin
+#AVR_TOOLS_PATH ?=	$(INSTALL_DIR)/hardware/tools/avr/bin
+AVR_TOOLS_PATH ?=	/usr/bin
 
 
-PORT = /dev/ttyUSB*
-UPLOAD_RATE = 57600
-AVRDUDE_PROGRAMMER = stk500v1
-MCU = atmega168
-#MCU = atmega328p
-F_CPU = 16000000
+PORT ?=	/dev/ttyUSB*
+UPLOAD_RATE ?=	57600
+AVRDUDE_PROGRAMMER ?=	stk500v1
+MCU ?=	atmega168
+#MCU ?= atmega328p
+F_CPU ?=	16000000
 
 ############################################################################
 # Below here nothing should be changed...
 
-VERSION=22
+VERSION ?=	22
 ARDUINO = $(INSTALL_DIR)/hardware/arduino/cores/arduino
 ARDUINO_LIB = $(INSTALL_DIR)/libraries
 AVRDUDE_PATH = $(INSTALL_DIR)/hardware/tools
