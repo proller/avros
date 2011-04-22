@@ -52,14 +52,14 @@ void loop()
     case '.': // press . to start-stop your program
         stop = !stop;
         break;
-    case '+': // press +
+    case '+': // press + to increase delay
         bdelay *= 2;
         break;
-    case '-': // press -
+    case '-': // press - to decrease delay
         bdelay /= 2;
         break;
-    case '=': // press -
-        bdelay /= 2;
+    case '=': // press =123 to set delay
+        bdelay = read_num(4);
         break;
 
     }
