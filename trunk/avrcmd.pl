@@ -106,7 +106,8 @@ sub new {
 
 unless (caller) {
 my $port = __PACKAGE__->new();
-$port->write($_) for @ARGV;
+$port->write($_.' ') for @ARGV;
+#sleep 10;
 }
 
 1;

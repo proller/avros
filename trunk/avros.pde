@@ -18,6 +18,9 @@
 
 //#define SPEED 9600 // serial speed, default 115200 
 
+
+//#define DEBUG 1
+
 #include "avros.h"
 
 
@@ -44,6 +47,7 @@ void loop()
 {
     if (!stop) loop_my();
 
+	// variant 1: with lib first parse:
     int cmd = sp_loop();
     // your comands handler
     switch (cmd) {
@@ -63,4 +67,14 @@ void loop()
         break;
 
     }
+	
+	/* //variant2 with your parser first 
+	| 
+	int cmd = read_chr(READ_TIMEOUT_FIRST);
+    switch (cmd) {
+	case 'c'
+		// your command code
+    default:
+		cmd_parse(cmd);
+	*/
 }

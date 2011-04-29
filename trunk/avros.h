@@ -10,21 +10,28 @@
 
  examples:
 
- simple led on: 13 pin = n 
- send: mn1 wn1	
- or pin numbering variant2: 13 pin = D
- send: mD1wD1	
+ simple led on: 13 pin 
+ send: w13,1	
 
-        mode write, on led, wait, off led, wait, on led:
-        pin n = 13          1 sec
- send:	mn1         wn1     d1000 wn0      d1000 wn1
+ pin can be maximum 2 chars, we can write without separator:
+ w131
+ but for pins 0-9 only:
+ w021
+ w2,1
  
- monitor analog0 step 10 (pin 14 = o = E)
- send: mo0 Mo10
+ 
+
+        on led, wait, off led, wait, on led:
+                1 sec
+ send:  w13,1   d1000 w13,0    d1000 w13,1
+ 
+ by default reads and writes sets pinMode auromaticaly, but you can:
+   mode read, monitor analog0 step 10 
+ send: m14,0 M14,10
 
 
  test eprom src - on wait off pin 13 (led) send:
- send: E o mn1 wn1 d1000 wn0 d1000 O S E s
+ send: E o m13,1 w13,1 d1000 w13,0 d1000 O S E s
  .     \--prog-----------------------+-/ |
  .                                   |    \run
  .                                    \only once, remove to blink forever
@@ -34,11 +41,11 @@
  Serial protocol description:
 
  values:
- P - coded pin [0-9A-LM-Z] or [a-z]
+ P - pin 1, 12, 12 01
  B - binary 0 or 1 or '0' or '1'
  V - numeric value { or binary for '0'-'9' started from \x00 }-todo
 
- commands: [command byte][pin byte][value?]
+ commands: [command byte][pin[,]][value?]
  all functions always return pins in variant2 [a-vw-z]
  // todo binary return or variant1
 
@@ -87,7 +94,8 @@
  you can split multiplie commands by space, \n or tab, or input without spaces
 
 
- Arduino pins numbering:
+ Arduino pins numbering: 
+ v1, v2 - deprecated, can be used only with #define READ_PIN_ONE_BYTE 1
  n	v1	v2	Duemilanove	 Mega
  0	0	a	RX               RX
  1	1	b	TX               TX
@@ -232,6 +240,11 @@
 #define READ_TIMEOUT_FIRST 0
 #endif
 
+// w1,1 w011 w131 w13,1 
+#if !defined(READ_SEPARATOR)
+#define READ_SEPARATOR ','
+#endif
+
 #if !defined(AUTO_MONITOR)
 #define AUTO_MONITOR 1
 #endif
@@ -338,7 +351,7 @@ int read_chr(int timeout = READ_TIMEOUT)//wait one second max
             return Serial.read();
         }
 #if EPROM
-    } else {
+    } else if(read_src == 2) {
         if (read_eprom > EPROM    )  read_eprom = 0;
         byte   r = EEPROM.read(read_eprom++);
         if (r == 'E') {
@@ -347,9 +360,13 @@ int read_chr(int timeout = READ_TIMEOUT)//wait one second max
         }
         return r;
 #endif
+#if SRC_STRING
+    } else if(read_src == 2) {
+#endif
     }
     return -1;
 }
+#if READ_PIN_ONE_BYTE
 byte char2pin(byte pin)
 {
     if (pin >= 'a') pin -= 'a';
@@ -357,6 +374,8 @@ byte char2pin(byte pin)
     if (pin >= '0') pin -= '0';
     return pin;
 }
+#endif
+
 boolean char2bin(byte value)
 {
     if (value >= '0') value -= '0';
@@ -382,6 +401,54 @@ int read_num(byte maxchars = 5)
         } else  break;
     } while (value >= 0 and-- maxchars > 0);
     return value;
+}
+
+int read_pin(bool flush = 
+#if READ_SEPARATOR
+1
+#else
+0
+#endif
+
+) {
+#if READ_PIN_ONE_BYTE
+  return char2pin(read_chr());
+#endif
+
+  int pin = read_num(2);
+  if (flush){
+//#if READ_SEPARATOR
+  if (pin >= 10) {
+  #if DEBUG
+       // Serial.println("chroops");
+  #endif
+
+		serial_buf = read_chr();
+  } 
+//  else 
+  if ( (serial_buf < '0' or serial_buf > '9')) {
+  #if DEBUG
+       // Serial.print("BU:");
+        
+      //  Serial.println(serial_buf);
+  #endif
+
+ 
+    serial_buf = -1;
+  }
+
+  //#endif
+
+  }
+  return pin;
+}
+
+void print_pin_sep(int pin) {
+#if REPORT
+        Serial.print(pin);
+        Serial.print(READ_SEPARATOR);
+#endif
+
 }
 
 void pulseOut(int pin, int us)
@@ -419,7 +486,7 @@ int cmd_parse(int cmd)
 #endif
         break;
     case 'w':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         value = char2bin(read_chr());
 #if AUTO_MONITOR
         pinMode(pin, OUTPUT);
@@ -427,32 +494,32 @@ int cmd_parse(int cmd)
         digitalWrite(pin, value);
 #if REPORT
         Serial.print("w");
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.println(value);
 #endif
         break;
     case 'W':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         value = read_num(3);
         //pinMode(pin, OUTPUT);
         analogWrite(pin, value);
 #if REPORT
         Serial.print("W");
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.println(value);
 #endif
     case 'r':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         //pinMode(pin, INPUT);
 #if AUTO_MONITOR
         pinMode(pin, INPUT);
 #endif
         Serial.print("r");
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.println(digitalRead(pin), DEC);
         break;
     case 'R':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         if (pin >= PIN_ANALOG_FROM) pin -= PIN_ANALOG_FROM;
         //if (pin > 8)   break
         //pinMode(pin, INPUT);
@@ -461,12 +528,12 @@ int cmd_parse(int cmd)
         Serial.println(analogRead(pin), DEC);
         break;
     case 'm':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         value = char2bin(read_chr());
         pinMode(pin, value);
 #if REPORT
         Serial.print("m");
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.println(value);
 #endif
         break;
@@ -485,12 +552,13 @@ int cmd_parse(int cmd)
 #endif
         break;
     case 'M':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         value = read_num(4);
         monitor_pin[pin] = value;
 #if REPORT
         Serial.print("M");
-        Serial.print('a' + pin, BYTE);
+		
+        print_pin_sep(pin);
         Serial.println(value, DEC);
 #endif
         break;
@@ -576,13 +644,13 @@ int cmd_parse(int cmd)
 
 
     case 'p':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         //pinMode(pin, INPUT);
 #if AUTO_MONITOR
         pinMode(pin, INPUT);
 #endif
         Serial.print("p");
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         value_ul = pulseIn(pin, HIGH);
         //Serial.println( pulseIn(pin, HIGH), DEC);
         Serial.println( value_ul, DEC);
@@ -592,7 +660,7 @@ int cmd_parse(int cmd)
 
         break;
     case 'P':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         value = read_num(4);
         //pinMode(pin, INPUT);
 #if AUTO_MONITOR
@@ -601,7 +669,7 @@ int cmd_parse(int cmd)
         pulseOut(pin, value);
 #if REPORT
         Serial.print("P");
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.println(value);
 #endif
 
@@ -616,7 +684,7 @@ int cmd_parse(int cmd)
 
 #if SERVO
     case 'Z':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         servo_attach(pin);
         /*	if (!servos[pin]) {
          Servo servo;
@@ -626,7 +694,7 @@ int cmd_parse(int cmd)
 #if REPORT
         Serial.print("Z");
 
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.print(servo[servon[pin]].attached(), DEC);
         Serial.println(servon[pin], DEC);
         //    Serial.println(servos[pin]->attached(), DEC);
@@ -634,7 +702,7 @@ int cmd_parse(int cmd)
         break;
 
     case 'z':
-        pin = char2pin(read_chr());
+        pin = read_pin();
         value = read_num(3);
         //    value = char2bin(read_chr());
         servo[servon[pin]].write(value);
@@ -642,7 +710,7 @@ int cmd_parse(int cmd)
 #if REPORT
         Serial.print("z");
         //    Serial.print(servon[pin], DEC);
-        Serial.print('a' + pin, BYTE);
+        print_pin_sep(pin);
         Serial.print(servon[pin], DEC);
         Serial.println(servo[servon[pin]].read(), DEC);
         //    Serial.println(servos[pin]->read(), DEC);
@@ -659,15 +727,17 @@ int cmd_parse(int cmd)
     return 0;
 }
 
-/* todo
+/// todo unfinished
+#if SRC_STRING
 
 int run_string(char * s) {
 	read_src =   read_src_want = 2;
         read_string = s;
 	cmd_parse( read_chr());
 }
+#endif
 
-*/
+
 
 
 int sp_loop()
