@@ -34,6 +34,8 @@
 #
 # $Id$
 
+# freebsd: devel/avrdude devel/avr-gcc
+
 TARGET = $(notdir $(CURDIR))
 #INSTALL_DIR = $(HOME)/arduino-0022
 INSTALL_DIR ?= /usr/local/arduino
@@ -44,9 +46,8 @@ INSTALL_DIR ?= /usr/local/arduino
 #INSTALL_DIR ?= /cygdrive/c/Program\ Files/arduino
 #INSTALL_DIR ?= /cygdrive/c/PROGRA~1/arduino
 
-#AVR_TOOLS_PATH ?=	$(INSTALL_DIR)/hardware/tools/avr/bin
-AVR_TOOLS_PATH ?=	/usr/bin
-
+#AVR_TOOLS_PATH ?=	$(INSTALL_DIR)/hardware/tools/avr/bin/
+#AVR_TOOLS_PATH ?=	/usr/bin/
 
 PORT ?=	/dev/ttyUSB*
 UPLOAD_RATE ?=	57600
@@ -59,9 +60,9 @@ F_CPU ?=	16000000
 # Below here nothing should be changed...
 
 VERSION ?=	22
-ARDUINO = $(INSTALL_DIR)/hardware/arduino/cores/arduino
-ARDUINO_LIB = $(INSTALL_DIR)/libraries
-AVRDUDE_PATH = $(INSTALL_DIR)/hardware/tools
+ARDUINO ?= $(INSTALL_DIR)/hardware/arduino/cores/arduino
+ARDUINO_LIB ?= $(INSTALL_DIR)/libraries
+AVRDUDE_PATH ?= $(INSTALL_DIR)/hardware/tools
 C_MODULES =  \
 $(ARDUINO)/wiring_pulse.c \
 $(ARDUINO)/wiring_analog.c \
@@ -142,15 +143,15 @@ AVRDUDE_FLAGS = -V -F -C $(INSTALL_DIR)/hardware/tools/avrdude.conf \
 -b $(UPLOAD_RATE)
 
 # Program settings
-CC = $(AVR_TOOLS_PATH)/avr-gcc
-CXX = $(AVR_TOOLS_PATH)/avr-g++
-LD = $(AVR_TOOLS_PATH)/avr-gcc
-OBJCOPY = $(AVR_TOOLS_PATH)/avr-objcopy
-OBJDUMP = $(AVR_TOOLS_PATH)/avr-objdump
-AR  = $(AVR_TOOLS_PATH)/avr-ar
-SIZE = $(AVR_TOOLS_PATH)/avr-size
-NM = $(AVR_TOOLS_PATH)/avr-nm
-AVRDUDE = $(AVRDUDE_PATH)/avrdude
+CC = $(AVR_TOOLS_PATH)avr-gcc
+CXX = $(AVR_TOOLS_PATH)avr-g++
+LD = $(AVR_TOOLS_PATH)avr-gcc
+OBJCOPY = $(AVR_TOOLS_PATH)avr-objcopy
+OBJDUMP = $(AVR_TOOLS_PATH)avr-objdump
+AR  = $(AVR_TOOLS_PATH)avr-ar
+SIZE = $(AVR_TOOLS_PATH)avr-size
+NM = $(AVR_TOOLS_PATH)avr-nm
+AVRDUDE = $(AVRDUDE_PATH)avrdude
 REMOVE = rm -f
 MV = mv -f
 
