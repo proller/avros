@@ -11,7 +11,7 @@
 #include "EEPROM.h"
 #endif
 
-//#define SERVO 4 // enable servo lib
+//#define SERVO 4 // enable servo lib, allocate 4 servos
 #if SERVO
 #include "Servo.h" 
 #endif

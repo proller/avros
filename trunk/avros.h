@@ -41,7 +41,7 @@
  Serial protocol description:
 
  values:
- P - pin 1, 12, 12 01
+ P - pin (2 digits or one with separator) 1, 12, 12 01
  B - binary 0 or 1 or '0' or '1'
  V - numeric value { or binary for '0'-'9' started from \x00 }-todo
 
@@ -49,7 +49,7 @@
  all functions always return pins in variant2 [a-vw-z]
  // todo binary return or variant1
 
- a
+ a         // some letters empty, you can write yours handlers
  b
  c
  dV	delay(ms)
