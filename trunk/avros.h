@@ -311,7 +311,8 @@ void monitor()
             if (monitor_last[i] >=    now + monitor_pin[i] or monitor_last[i] <= now - monitor_pin[i]) {
                 monitor_last[i]               = now;
                 Serial.print(i < PIN_ANALOG_FROM ? "r" : "R");
-                Serial.print('a' + i, BYTE);
+                //Serial.print('a' + i, BYTE);
+	        print_pin_sep(i);
                 Serial.println(now, DEC);
 #if defined(PIN_SRC)
                 if (read_src_pin and i            == PIN_SRC) {
@@ -524,7 +525,8 @@ int cmd_parse(int cmd)
         //if (pin > 8)   break
         //pinMode(pin, INPUT);
         Serial.print("R");
-        Serial.print('a' + PIN_ANALOG_FROM + pin, BYTE);
+	print_pin_sep(PIN_ANALOG_FROM + pin);
+        //Serial.print('a' + PIN_ANALOG_FROM + pin, BYTE);
         Serial.println(analogRead(pin), DEC);
         break;
     case 'm':
