@@ -299,7 +299,13 @@ void sp_setup()
 #endif
 }
 
+void print_pin_sep(int pin) {
+#if REPORT
+        Serial.print(pin);
+        Serial.print(READ_SEPARATOR);
+#endif
 
+}
 
 void monitor()
 {
@@ -442,14 +448,6 @@ int read_pin(bool flush =
 
   }
   return pin;
-}
-
-void print_pin_sep(int pin) {
-#if REPORT
-        Serial.print(pin);
-        Serial.print(READ_SEPARATOR);
-#endif
-
 }
 
 void pulseOut(int pin, int us)
@@ -604,7 +602,7 @@ int cmd_parse(int cmd)
 #endif
         break;
     case 'S':
-        read_src =   read_src_want = 0;
+        read_src = read_src_want = 0;
 #if REPORT
         Serial.println("S");
 #endif
