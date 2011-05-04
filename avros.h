@@ -10,23 +10,23 @@
 
  examples:
 
- simple led on: 13 pin 
- send: w13,1	
+ simple led on: 13 pin
+ send: w13,1
 
  pin can be maximum 2 chars, we can write without separator:
  w131
  but for pins 0-9 only:
  w021
  w2,1
- 
- 
+
+
 
         on led, wait, off led, wait, on led:
                 1 sec
  send:  w13,1   d1000 w13,0    d1000 w13,1
- 
+
  by default reads and writes sets pinMode auromaticaly, but you can:
-   mode read, monitor analog0 step 10 
+   mode read, monitor analog0 step 10
  send: m14,0 M14,10
 
 
@@ -65,7 +65,7 @@
  l	// test lamp example
  mPB	pinMode(pin, mode) mode: either INPUT=0 or OUTPUT=1.
  MPV	monitor  changes [with min step] V=0 - off bin V=1 - on analog: V=1-1024
- 	answer: rPB 
+ 	answer: rPB
  	answer: RPV
  n
  o	ignore src pin
@@ -85,7 +85,7 @@
  wPB	digitalWrite(pin, value) value: HIGH=1 or LOW=0
  WPV	analogWrite(pin, value) - PWM  values from 0 to 255
  x
- yP	servo attach    to use #define SERVO	 
+ yP	servo attach    to use #define SERVO
  zP	servo read
  ZPV	servo write
 
@@ -93,7 +93,7 @@
  you can split multiplie commands by space, \n or tab, or input without spaces
 
 
- Arduino pins numbering: 
+ Arduino pins numbering:
  v1, v2 - deprecated, can be used only with #define READ_PIN_ONE_BYTE 1
  n	v1	v2	Duemilanove	 Mega
  0	0	a	RX               RX
@@ -123,7 +123,7 @@
  23	N       x                        -/-
  24	O       y
  25	P       z
- 26	Q       
+ 26	Q
  27 	R
  28	S
  29	T
@@ -237,7 +237,7 @@
 #define READ_TIMEOUT_FIRST 0
 #endif
 
-// w1,1 w011 w131 w13,1 
+// w1,1 w011 w131 w13,1
 #if !defined(READ_SEPARATOR)
 #define READ_SEPARATOR ','
 #endif
@@ -262,7 +262,7 @@
 #if SERVO
 #include "Servo.h"
 Servo servo[SERVO];
-char servon[PIN_LAST+1];
+char servon[PIN_LAST + 1];
 char servolast = 0;
 //Servo *  servos[PIN_LAST] = {};
 #endif
@@ -280,9 +280,9 @@ int  read_eprom = 0;
 int  serial_buf = -1;
 
 #if MONITOR
-int  monitor_pin[PIN_LAST+1] = {
+int  monitor_pin[PIN_LAST + 1] = {
 };
-int  monitor_last[PIN_LAST+1] = {
+int  monitor_last[PIN_LAST + 1] = {
 };
 #endif
 
@@ -292,19 +292,20 @@ void sp_setup()
     Serial.begin(SPEED);
 
 #if MONITOR
- #if defined(PIN_SRC)
+#if defined(PIN_SRC)
     monitor_pin[PIN_SRC] = 1;
- #endif
+#endif
 #endif
 #if REPORT
     Serial.println("I");
 #endif
 }
 
-void print_pin_sep(int pin) {
+void print_pin_sep(int pin)
+{
 #if REPORT
-        Serial.print(pin);
-        Serial.print(READ_SEPARATOR);
+    Serial.print(pin);
+    Serial.print(READ_SEPARATOR);
 #endif
 
 }
@@ -314,10 +315,10 @@ void monitor()
 {
     for (byte i = 0; i <= PIN_LAST; ++i) {
 
-  //#if DEBUG
-                //Serial.print("MT:");
-	        //print_pin_sep(i);
-  //#endif
+        //#if DEBUG
+        //Serial.print("MT:");
+        //print_pin_sep(i);
+        //#endif
 
         if (monitor_pin[i]) {
             int    now;
@@ -327,7 +328,7 @@ void monitor()
                 monitor_last[i]               = now;
                 Serial.print(i < PIN_ANALOG_FROM ? "r" : "R");
                 //Serial.print('a' + i, BYTE);
-	        print_pin_sep(i);
+                print_pin_sep(i);
                 Serial.println(now, DEC);
 #if defined(PIN_SRC)
                 if (read_src_pin and i            == PIN_SRC) {
@@ -423,49 +424,50 @@ int read_num(byte maxchars = 5)
     return value;
 }
 
-int read_pin(bool flush = 
+int read_pin(bool flush =
 #if READ_SEPARATOR
-1
+                 1
 #else
-0
+                 0
 #endif
 
-) {
+            )
+{
 #if READ_PIN_ONE_BYTE
-  return char2pin(read_chr());
+    return char2pin(read_chr());
 #endif
 
-  int pin = read_num(2);
+    int pin = read_num(2);
 
-  //#if DEBUG
-  //      Serial.print("pinR:");
-   //     Serial.println(pin, DEC);
-  //#endif
-  if (flush){
+    //#if DEBUG
+    //      Serial.print("pinR:");
+    //     Serial.println(pin, DEC);
+    //#endif
+    if (flush) {
 //#if READ_SEPARATOR
-  if (pin >= 10) {
-  //#if DEBUG
-  //      Serial.println("pin >= 10");
-  //#endif
+        if (pin >= 10) {
+            //#if DEBUG
+            //      Serial.println("pin >= 10");
+            //#endif
 
-		serial_buf = read_chr();
-  } 
-//  else 
-  if ( (serial_buf < '0' or serial_buf > '9')) {
-  #if DEBUG
-       // Serial.print("BU:");
-        
-      //  Serial.println(serial_buf);
-  #endif
+            serial_buf = read_chr();
+        }
+//  else
+        if ( (serial_buf < '0' or serial_buf > '9')) {
+#if DEBUG
+            // Serial.print("BU:");
 
- 
-    serial_buf = -1;
-  }
+            //  Serial.println(serial_buf);
+#endif
 
-  //#endif
 
-  }
-  return pin;
+            serial_buf = -1;
+        }
+
+        //#endif
+
+    }
+    return pin;
 }
 
 void pulseOut(int pin, int us)
@@ -541,7 +543,7 @@ int cmd_parse(int cmd)
         //if (pin > 8)   break
         //pinMode(pin, INPUT);
         Serial.print("R");
-	print_pin_sep(PIN_ANALOG_FROM + pin);
+        print_pin_sep(PIN_ANALOG_FROM + pin);
         //Serial.print('a' + PIN_ANALOG_FROM + pin, BYTE);
         Serial.println(analogRead(pin), DEC);
         break;
@@ -576,7 +578,7 @@ int cmd_parse(int cmd)
         monitor_pin[pin] = value;
 #if REPORT
         Serial.print("M");
-		
+
         print_pin_sep(pin);
         Serial.println(value, DEC);
 #endif
@@ -750,10 +752,11 @@ int cmd_parse(int cmd)
 /// todo unfinished
 #if SRC_STRING
 
-int run_string(char * s) {
-	read_src =   read_src_want = 2;
-        read_string = s;
-	cmd_parse( read_chr());
+int run_string(char * s)
+{
+    read_src =   read_src_want = 2;
+    read_string = s;
+    cmd_parse( read_chr());
 }
 #endif
 

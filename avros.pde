@@ -13,10 +13,10 @@
 
 //#define SERVO 4 // enable servo lib, allocate 4 servos
 #if SERVO
-#include "Servo.h" 
+#include "Servo.h"
 #endif
 
-//#define SPEED 9600 // serial speed, default 115200 
+//#define SPEED 9600 // serial speed, default 115200
 
 
 #define DEBUG 1
@@ -33,12 +33,13 @@ void setup()
 int blink = 0;
 int bdelay = 100;
 
-void loop_my() {
+void loop_my()
+{
 // my loop
 
-  pinMode(13, OUTPUT);
-  digitalWrite(13, blink=!blink ? HIGH : LOW);
-  delay(bdelay);
+    pinMode(13, OUTPUT);
+    digitalWrite(13, blink = !blink ? HIGH : LOW);
+    delay(bdelay);
 }
 
 int stop = 0;
@@ -47,7 +48,7 @@ void loop()
 {
     if (!stop) loop_my();
 
-	// variant 1: with lib first parse:
+    // variant 1: with lib first parse:
     int cmd = sp_loop();
     // your comands handler
     switch (cmd) {
@@ -67,14 +68,14 @@ void loop()
         break;
 
     }
-	
-	/* //variant2 with your parser first 
-	| 
-	int cmd = read_chr(READ_TIMEOUT_FIRST);
+
+    /* //variant2 with your parser first
+    |
+    int cmd = read_chr(READ_TIMEOUT_FIRST);
     switch (cmd) {
-	case 'c'
-		// your command code
+    case 'c'
+    	// your command code
     default:
-		cmd_parse(cmd);
-	*/
+    	cmd_parse(cmd);
+    */
 }
