@@ -3,13 +3,22 @@
 
 =example
 
-avrcmd.pm + + + M0,1 - - - . .
+perl avrcmd.pm . d1000 w13,0 d500 w13,1
+
+perl avrcmd.pm + + + M0,1 M1,1 - - - .
 
 
 =INSTALL
 cpan Device::SerialPort
 cpan Win32::SerialPort
+
+windows:
+choice com port number 0-9 (you cant access from commandline to coms >=10)
+to set com props you can start manually:
+mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
+
 =cut
+
 #our %config;
 package avrcmd;
 use strict;
@@ -103,6 +112,11 @@ sub new {
   $self->{port}->databits( $self->{'databits'} //= 8 );
   $self->{port}->parity( $self->{'parity'}     //= 'none' );
   $self->{port}->stopbits( $self->{'stopbits'} //= 1 );
+  if ( $^O =~ /^(ms|cyg)?win/i ) {
+    $self->{winmode} = "mode $self->{path} BAUD=$self->{'baudrate'} ".(!$self->{'parity'} ? () : "PARITY=" . ($self->{'parity'} eq 'odd' ? 'o': $self->{'parity'} eq 'even' ? 'e': 'n' )." ")."DATA=$self->{'databits'} STOP=$self->{'stopbits'}";
+    $_ = `$self->{winmode}`;
+    print $self->{winmode},"\n",$_ if $self->{debug};
+  }
   print +( map { $self->{$_} . ' ' } qw(path baudrate databits parity stopbits) ), "\n" if $self->{debug};
   #$self->{'waitinit'} //= 1;
   if ( $self->{'waitinit'} ) {
@@ -152,15 +166,17 @@ pulseIn()
 
 
 unless (caller) {
+  local $| = 1;
   my $port = __PACKAGE__->new(
     #'baudrate'=>9600,
     debug => 1,
     waitinit => 1,
   );
-  sleep 1, $port->write( $_ . ' ' ), $port->say for @ARGV;
+  #sleep 1, 
+  $port->write( $_ . ' ' ), $port->say for @ARGV;
   #sleep 10;
   my $t = time;
     local $SIG{INT} = sub { $t = 0; };
-  $port->say while time - $t < 10;
+  $port->say while time - $t < 60;
 }
 1;
