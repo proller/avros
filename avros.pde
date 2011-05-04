@@ -2,7 +2,7 @@
 
 //for more detailed description read avros.h
 
-//defines for your bunny processing - must include files here, not in .h
+//includes for your bunny processing - must include files here, not in .h
 //if you use Makefile - you can delete #include's from here
 #include "WProgram.h"
 //#define EPROM 0 // disable
@@ -19,7 +19,7 @@
 //#define SPEED 9600 // serial speed, default 115200
 
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #include "avros.h"
 

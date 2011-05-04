@@ -85,7 +85,7 @@
  wPB	digitalWrite(pin, value) value: HIGH=1 or LOW=0
  WPV	analogWrite(pin, value) - PWM  values from 0 to 255
  x
- yP	servo attach    to use #define SERVO
+ yP	servo attach    to use #define SERVO 1
  zP	servo read
  ZPV	servo write
 
@@ -94,45 +94,44 @@
 
 
  Arduino pins numbering:
- v1, v2 - deprecated, can be used only with #define READ_PIN_ONE_BYTE 1
- n	v1	v2	Duemilanove	 Mega
- 0	0	a	RX               RX
- 1	1	b	TX               TX
- 2 	2	c		int      PWM
- 3	3	d	PWM	int      -/-
- 4	4	e
- 5	5	f	PWM
- 6	6	g	PWM
- 7	7       h
- 8	8       i
- 9	9	j	PWM
- 10	A	k	PWM
- 11	B	l	PWM
- 12	C       m                        -/-
- 13	D	n	led              PWM
- 14	E	o	a0	analogs  COM
- 15	F	p	a1               -/-
- 16	G	q	a2
- 17	H	r	a3
- 18	I	s	a4
- 19	J	t	a5
- 20	K	u	a6               -/-
- 21	L	v	a7               COM
+ n	Duemilanove	 Mega
+ 0	RX               RX
+ 1	TX               TX
+ 2 		int      PWM
+ 3	PWM	int      -/-
+ 4
+ 5	PWM
+ 6	PWM
+ 7
+ 8
+ 9	PWM
+ 10	PWM
+ 11	PWM
+ 12	                 -/-
+ 13	led              PWM
+ 14	a0	analogs  COM
+ 15	a1               -/-
+ 16	a2
+ 17	a3
+ 18	a4
+ 19	a5
+ 20	a6               -/-
+ 21	a7               COM
  Mega:
- 22	M	w                        DGT
- 23	N       x                        -/-
- 24	O       y
- 25	P       z
- 26	Q
- 27 	R
- 28	S
- 29	T
- 30	U
- 31	V
- 32	W
- 33	X
- 34	Y
- 35	Z
+ 22	                 DGT
+ 23	                 -/-
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
  36
  37
  38
@@ -149,40 +148,28 @@
  49
  50
  51
- 52                                      -/-
- 53                                      DGT
- 54                                      ANL
- 55                                      -/-
- 56
- 57
- 58
- 59
- 60
- 61
- 62
- 63
- 64
- 65
- 66
- 67
- 68
- 69                                       -/-
- 60                                       ANL
-
-
- variant3 : binary byte // not tested
-
-
-
-
-
-
+ 52                      -/-
+ 53                      DGT
+ 54                      a0 analogs
+ 55                      a1
+ 56                      a2
+ 57                      a3
+ 58                      a4
+ 59                      a5
+ 60                      a6
+ 61                      a7
+ 62                      a8
+ 63                      a9
+ 64                      a10
+ 65                      a11
+ 66                      a12
+ 67                      a13
+ 68                      a14
+ 69                      a15
 
  todo:
  interrupts() noInterrupts()
- finish binary values
- mega alt pin numbering
- multibyte pin input [W12,100]
+ finish binary values/pins
  execute commands from string
  tone
 
