@@ -289,6 +289,10 @@ clean:
 	applet/$(TARGET).map applet/$(TARGET).sym applet/$(TARGET).lss applet/core.a \
 	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d)
 
+tidy:
+	astyle -A3 -p *.pde *.h
+	perltidy -b *.pl *.pm
+
 .PHONY:	all build elf hex eep lss sym program coff extcoff clean applet_files sizebefore sizeafter
 
 #include $(SRC:.c=.d)
