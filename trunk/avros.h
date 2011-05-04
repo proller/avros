@@ -31,10 +31,10 @@
 
 
  test eprom src - on wait off pin 13 (led) send:
- send: E o m13,1 w13,1 d1000 w13,0 d1000 O S E s
- .     \--prog-----------------------+-/ |
- .                                   |    \run
- .                                    \only once, remove to blink forever
+ send: E o m13,1 w13,1 d1000 w13,0 d1000 O S E e s
+ .     \--prog-----------------------------+-/   |
+ .                                         |     \run
+ .                                         \only once, remove to blink forever
 
 
 
@@ -47,7 +47,6 @@
 
  commands: [command byte][pin[,]][value?]
  all functions always return pins in variant2 [a-vw-z]
- // todo binary return or variant1
 
  a         // some letters empty, you can write yours handlers
  b
@@ -185,9 +184,7 @@
  mega alt pin numbering
  multibyte pin input [W12,100]
  execute commands from string
-
-
- test winxp cmdline: mode com1: baud=9600 data=8 stop=1 parity=n
+ tone
 
  */
 #if !defined(avros_h)
@@ -245,8 +242,12 @@
 #define READ_SEPARATOR ','
 #endif
 
-#if !defined(AUTO_MONITOR)
-#define AUTO_MONITOR 1
+#if !defined(MONITOR)
+#define MONITOR 1
+#endif
+
+#if !defined(AUTO_MODE)
+#define AUTO_MODE 1
 #endif
 
 //#define BINARY // TODO NOT FINISHED
@@ -261,7 +262,7 @@
 #if SERVO
 #include "Servo.h"
 Servo servo[SERVO];
-char servon[PIN_LAST];
+char servon[PIN_LAST+1];
 char servolast = 0;
 //Servo *  servos[PIN_LAST] = {};
 #endif
@@ -275,24 +276,25 @@ byte read_src_want = 0; // set to 1 for automatic execution from eprom
 byte read_src_pin = 1;
 #endif
 
-
-int  monitor_pin[PIN_LAST] = {
-};
-int  monitor_last[PIN_LAST] = {
-};
-
-
 int  read_eprom = 0;
 int  serial_buf = -1;
 
+#if MONITOR
+int  monitor_pin[PIN_LAST+1] = {
+};
+int  monitor_last[PIN_LAST+1] = {
+};
+#endif
 
 void sp_setup()
 {
     //  Serial.begin(9600);
     Serial.begin(SPEED);
 
-#if defined(PIN_SRC)
+#if MONITOR
+ #if defined(PIN_SRC)
     monitor_pin[PIN_SRC] = 1;
+ #endif
 #endif
 #if REPORT
     Serial.println("I");
@@ -307,9 +309,16 @@ void print_pin_sep(int pin) {
 
 }
 
+#if MONITOR
 void monitor()
 {
-    for (byte i = 0; i <= PIN_LAST; ++i)
+    for (byte i = 0; i <= PIN_LAST; ++i) {
+
+  //#if DEBUG
+                //Serial.print("MT:");
+	        //print_pin_sep(i);
+  //#endif
+
         if (monitor_pin[i]) {
             int    now;
             if (i < PIN_ANALOG_FROM)  now = digitalRead(i);
@@ -336,7 +345,9 @@ void monitor()
                  */
             }
         }
+    }
 }
+#endif
 
 
 int read_chr(int timeout = READ_TIMEOUT)//wait one second max
@@ -352,7 +363,9 @@ int read_chr(int timeout = READ_TIMEOUT)//wait one second max
 #if DELAY
             delay(DELAY);
 #endif
+#if MONITOR
             monitor();
+#endif
         }
         if (Serial.available()) {
             return Serial.read();
@@ -423,12 +436,17 @@ int read_pin(bool flush =
 #endif
 
   int pin = read_num(2);
+
+  //#if DEBUG
+  //      Serial.print("pinR:");
+   //     Serial.println(pin, DEC);
+  //#endif
   if (flush){
 //#if READ_SEPARATOR
   if (pin >= 10) {
-  #if DEBUG
-       // Serial.println("chroops");
-  #endif
+  //#if DEBUG
+  //      Serial.println("pin >= 10");
+  //#endif
 
 		serial_buf = read_chr();
   } 
@@ -487,7 +505,7 @@ int cmd_parse(int cmd)
     case 'w':
         pin = read_pin();
         value = char2bin(read_chr());
-#if AUTO_MONITOR
+#if AUTO_MODE
         pinMode(pin, OUTPUT);
 #endif
         digitalWrite(pin, value);
@@ -510,7 +528,7 @@ int cmd_parse(int cmd)
     case 'r':
         pin = read_pin();
         //pinMode(pin, INPUT);
-#if AUTO_MONITOR
+#if AUTO_MODE
         pinMode(pin, INPUT);
 #endif
         Serial.print("r");
@@ -551,6 +569,7 @@ int cmd_parse(int cmd)
         Serial.println("D");
 #endif
         break;
+#if MONITOR
     case 'M':
         pin = read_pin();
         value = read_num(4);
@@ -562,6 +581,7 @@ int cmd_parse(int cmd)
         Serial.println(value, DEC);
 #endif
         break;
+#endif
 #if EPROM
     case  'e':
         Serial.println("e");
@@ -646,7 +666,7 @@ int cmd_parse(int cmd)
     case 'p':
         pin = read_pin();
         //pinMode(pin, INPUT);
-#if AUTO_MONITOR
+#if AUTO_MODE
         pinMode(pin, INPUT);
 #endif
         Serial.print("p");
@@ -663,7 +683,7 @@ int cmd_parse(int cmd)
         pin = read_pin();
         value = read_num(4);
         //pinMode(pin, INPUT);
-#if AUTO_MONITOR
+#if AUTO_MODE
         pinMode(pin, OUTPUT);
 #endif
         pulseOut(pin, value);
@@ -742,7 +762,9 @@ int run_string(char * s) {
 
 int sp_loop()
 {
+#if MONITOR
     monitor();
+#endif
     if (!Serial.available()) {
         read_src = read_src_want;
     } else if (read_src != 0) {

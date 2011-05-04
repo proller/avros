@@ -19,7 +19,7 @@
 //#define SPEED 9600 // serial speed, default 115200 
 
 
-//#define DEBUG 1
+#define DEBUG 1
 
 #include "avros.h"
 
