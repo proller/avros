@@ -18,7 +18,6 @@ to set com props you can start manually:
 mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 
 =cut
-
 #our %config;
 package avrcmd;
 use strict;
@@ -27,7 +26,7 @@ use Time::HiRes qw(time sleep);
 my @porttry;
 #my $portpath;
 sub read() {
-    my $self = shift if ref $_[0];
+  my $self = shift if ref $_[0];
   #Poll to see if any data is coming in
   return unless $self->{port};
   my $ret;
@@ -42,14 +41,14 @@ sub read() {
 }
 
 sub rdf {
-    my $self = shift if ref $_[0];
+  my $self = shift if ref $_[0];
   local $_ = $self->read;
   s/\s+/ /;
   $_;
 }
 
 sub say() {
-    my $self = shift if ref $_[0];
+  my $self = shift if ref $_[0];
   local $_ = $self->read;
   #local $_ = rd;
   #print "read[", $_, "]" if length $_;
@@ -58,7 +57,7 @@ sub say() {
 }
 
 sub write (@) {
-    my $self = shift if ref $_[0];
+  my $self = shift if ref $_[0];
   return unless $self->{port};
   $self->{port}->write( join '', @_ );
   #print "writing [", ( join '', @_ ), "]\n";
@@ -66,10 +65,9 @@ sub write (@) {
 
 sub new {
   my $class = shift;
-  my $self = {@_};
-    if ( ref $class eq __PACKAGE__ ) { $self = $class; }
-      else                             { bless( $self, $class ) unless ref $class; }
-      
+  my $self  = {@_};
+  if ( ref $class eq __PACKAGE__ ) { $self = $class; }
+  else                             { bless( $self, $class ) unless ref $class; }
   #my (%config) = @_;
   #warn %config;
   $self->{path} //= $self->{com};
@@ -100,7 +98,7 @@ sub new {
   }
   #$quiet
   #|| die "Can't open $self->{port}Name: $^E\n";    # $quiet is optional
-  unless ($self->{port}) {
+  unless ( $self->{port} ) {
     eval q{use Device::SerialPort;};
     #my $self->{port} = Device::SerialPort->new("/dev/tty.usbserial");
     #my $self->{port} = Device::SerialPort->new("COM2");
@@ -113,9 +111,14 @@ sub new {
   $self->{port}->parity( $self->{'parity'}     //= 'none' );
   $self->{port}->stopbits( $self->{'stopbits'} //= 1 );
   if ( $^O =~ /^(ms|cyg)?win/i ) {
-    $self->{winmode} = "mode $self->{path} BAUD=$self->{'baudrate'} ".(!$self->{'parity'} ? () : "PARITY=" . ($self->{'parity'} eq 'odd' ? 'o': $self->{'parity'} eq 'even' ? 'e': 'n' )." ")."DATA=$self->{'databits'} STOP=$self->{'stopbits'}";
+    $self->{winmode} = "mode $self->{path} BAUD=$self->{'baudrate'} "
+      . (
+      !$self->{'parity'}
+      ? ()
+      : "PARITY=" . ( $self->{'parity'} eq 'odd' ? 'o' : $self->{'parity'} eq 'even' ? 'e' : 'n' ) . " "
+      ) . "DATA=$self->{'databits'} STOP=$self->{'stopbits'}";
     $_ = `$self->{winmode}`;
-    print $self->{winmode},"\n",$_ if $self->{debug};
+    print $self->{winmode}, "\n", $_ if $self->{debug};
   }
   print +( map { $self->{$_} . ' ' } qw(path baudrate databits parity stopbits) ), "\n" if $self->{debug};
   #$self->{'waitinit'} //= 1;
@@ -130,32 +133,32 @@ sub new {
 
 sub cmd ($;@) {
   my $self = shift if ref $_[0];
-  $self->write (shift, join ',', @_);
+  $self->write( shift, join ',', @_ );
 }
 
-sub digitalWrite ($$){
+sub digitalWrite ($$) {
   my $self = shift if ref $_[0];
-  $self->cmd('w', @_);
+  $self->cmd( 'w', @_ );
 }
 
-sub analogWrite ($$){
+sub analogWrite ($$) {
   my $self = shift if ref $_[0];
-  $self->cmd('W', @_);
+  $self->cmd( 'W', @_ );
 }
 
-sub pinMode ($$){
+sub pinMode ($$) {
   my $self = shift if ref $_[0];
-  $self->cmd('m', @_);
+  $self->cmd( 'm', @_ );
 }
 
-sub digitalRead ($$){
+sub digitalRead ($$) {
   my $self = shift if ref $_[0];
-  $self->cmd('r', @_);
+  $self->cmd( 'r', @_ );
 }
 
-sub analogRead ($$){
+sub analogRead ($$) {
   my $self = shift if ref $_[0];
-  $self->cmd('R', @_);
+  $self->cmd( 'R', @_ );
 }
 
 =todo
@@ -163,20 +166,18 @@ tone()
 noTone()
 pulseIn()
 =cut
-
-
 unless (caller) {
   local $| = 1;
   my $port = __PACKAGE__->new(
     #'baudrate'=>9600,
-    debug => 1,
+    debug    => 1,
     waitinit => 1,
   );
-  #sleep 1, 
+  #sleep 1,
   $port->write( $_ . ' ' ), $port->say for @ARGV;
   #sleep 10;
   my $t = time;
-    local $SIG{INT} = sub { $t = 0; };
+  local $SIG{INT} = sub { $t = 0; };
   $port->say while time - $t < 60;
 }
 1;
