@@ -36,7 +36,6 @@ int bdelay = 100;
 void loop_my()
 {
 // my loop
-
     pinMode(13, OUTPUT);
     digitalWrite(13, blink = !blink ? HIGH : LOW);
     delay(bdelay);
@@ -47,28 +46,25 @@ int stop = 0;
 void loop()
 {
     if (!stop) loop_my();
-
     // variant 1: with lib first parse:
     int cmd = sp_loop();
     // your comands handler
     switch (cmd) {
-    case 0 :
-        break;
-    case '.': // press . to start-stop your program
-        stop = !stop;
-        break;
-    case '+': // press + to increase delay
-        bdelay *= 2;
-        break;
-    case '-': // press - to decrease delay
-        bdelay /= 2;
-        break;
-    case '=': // press =123 to set delay
-        bdelay = read_num(4);
-        break;
-
+        case 0 :
+            break;
+        case '.': // press . to start-stop your program
+            stop = !stop;
+            break;
+        case '+': // press + to increase delay
+            bdelay *= 2;
+            break;
+        case '-': // press - to decrease delay
+            bdelay /= 2;
+            break;
+        case '=': // press =123 to set delay
+            bdelay = read_num(4);
+            break;
     }
-
     /* //variant2 with your parser first
     |
     int cmd = read_chr(READ_TIMEOUT_FIRST);
