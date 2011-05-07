@@ -290,7 +290,7 @@ clean:
 	$(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(CXXSRC:.cpp=.s) $(CXXSRC:.cpp=.d)
 
 tidy:
-	astyle -A3 -p *.pde *.h
+	astyle -A3 -p --indent-switches --indent-preprocessor --lineend=linux --delete-empty-lines *.pde *.h
 	perltidy -b *.pl *.pm
 
 .PHONY:	all build elf hex eep lss sym program coff extcoff clean applet_files sizebefore sizeafter

@@ -75,7 +75,7 @@ sub new {
     if ( $^O =~ /^(ms|cyg)?win/i ) {
       $self->{try_from} //= 0;
       $self->{try_to}   //= 30;
-      push @porttry, map { "COM$_" } $self->{try_from} .. $self->{try_to};    #reverse
+      push @porttry, map { "COM$_" } reverse $self->{try_from} .. $self->{try_to};    #reverse
     } else {
       $self->{try_from} //= 0;
       $self->{try_to}   //= 3;
@@ -85,16 +85,17 @@ sub new {
         push @porttry, reverse map { "/dev/ttyUSB$_" } $self->{try_from} .. $self->{try_to};
       }
     }
-    for (@porttry) {
+  }
+    for ($self->{path} ? $self->{path} : @porttry) {
       print "try [$_]\n" if $self->{debug};
       $self->{path} = $_, last if -e;
-    }
-  }
-  return unless $self->{path};
+    #}
+  next unless $self->{path};
   print "selected port [$self->{path}] [$^O]\n" if $self->{debug};
   if ( $^O =~ /^(ms)?win/i ) {
     eval q{use Win32::SerialPort; };
     $self->{port} = Win32::SerialPort->new( $self->{path} ) unless $@;
+  #warn "not opened [$self->{path}]" unless $self->{port};
   }
   #$quiet
   #|| die "Can't open $self->{port}Name: $^E\n";    # $quiet is optional
@@ -105,6 +106,8 @@ sub new {
     $self->{port} = Device::SerialPort->new( $self->{path} ) unless $@;
   }
   #die " Can't open port"
+  last if $self->{port};
+  }
   return unless $self->{port};
   $self->{port}->baudrate( $self->{'baudrate'} //= 115200 );
   $self->{port}->databits( $self->{'databits'} //= 8 );
@@ -167,17 +170,19 @@ noTone()
 pulseIn()
 =cut
 unless (caller) {
+  sub {
   local $| = 1;
   my $port = __PACKAGE__->new(
     #'baudrate'=>9600,
     debug    => 1,
     waitinit => 1,
-  );
+  ) or return;
   #sleep 1,
   $port->write( $_ . ' ' ), $port->say for @ARGV;
   #sleep 10;
   my $t = time;
   local $SIG{INT} = sub { $t = 0; };
   $port->say while time - $t < 60;
+  }->();
 }
 1;
