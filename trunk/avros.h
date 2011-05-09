@@ -20,7 +20,6 @@
  w2,1
 
 
-
         on led, wait, off led, wait, on led:
                 1 sec
  send:  w13,1   d1000 w13,0    d1000 w13,1
@@ -29,6 +28,8 @@
    mode read, monitor analog0 step 10
  send: m14,0 M14,10
 
+ test monitor: 1hz tone to pin, add monitor them:
+ send: t2,1 M2,1
 
  test eprom src - on wait off pin 13 (led) send:
  send: E o w13,1 d1000 w13,0 d1000 O S E e s
