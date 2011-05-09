@@ -40,13 +40,6 @@ sub read() {
   return $ret;
 }
 
-sub rdf {
-  my $self = shift if ref $_[0];
-  local $_ = $self->read;
-  s/\s+/ /;
-  $_;
-}
-
 sub say() {
   my $self = shift if ref $_[0];
   local $_ = $self->read;
@@ -86,27 +79,27 @@ sub new {
       }
     }
   }
-    for ($self->{path} ? $self->{path} : @porttry) {
-      print "try [$_]\n" if $self->{debug};
-      $self->{path} = $_, last if -e;
+  for ( $self->{path} ? $self->{path} : @porttry ) {
+    print "try [$_]\n" if $self->{debug};
+    $self->{path} = $_, last if -e;
     #}
-  next unless $self->{path};
-  print "selected port [$self->{path}] [$^O]\n" if $self->{debug};
-  if ( $^O =~ /^(ms)?win/i ) {
-    eval q{use Win32::SerialPort; };
-    $self->{port} = Win32::SerialPort->new( $self->{path} ) unless $@;
-  #warn "not opened [$self->{path}]" unless $self->{port};
-  }
-  #$quiet
-  #|| die "Can't open $self->{port}Name: $^E\n";    # $quiet is optional
-  unless ( $self->{port} ) {
-    eval q{use Device::SerialPort;};
-    #my $self->{port} = Device::SerialPort->new("/dev/tty.usbserial");
-    #my $self->{port} = Device::SerialPort->new("COM2");
-    $self->{port} = Device::SerialPort->new( $self->{path} ) unless $@;
-  }
-  #die " Can't open port"
-  last if $self->{port};
+    next unless $self->{path};
+    print "selected port [$self->{path}] [$^O]\n" if $self->{debug};
+    if ( $^O =~ /^(ms)?win/i ) {
+      eval q{use Win32::SerialPort; };
+      $self->{port} = Win32::SerialPort->new( $self->{path} ) unless $@;
+      #warn "not opened [$self->{path}]" unless $self->{port};
+    }
+    #$quiet
+    #|| die "Can't open $self->{port}Name: $^E\n";    # $quiet is optional
+    unless ( $self->{port} ) {
+      eval q{use Device::SerialPort;};
+      #my $self->{port} = Device::SerialPort->new("/dev/tty.usbserial");
+      #my $self->{port} = Device::SerialPort->new("COM2");
+      $self->{port} = Device::SerialPort->new( $self->{path} ) unless $@;
+    }
+    #die " Can't open port"
+    last if $self->{port};
   }
   return unless $self->{port};
   $self->{port}->baudrate( $self->{'baudrate'} //= 115200 );
@@ -136,7 +129,7 @@ sub new {
 
 sub cmd ($;@) {
   my $self = shift if ref $_[0];
-  $self->write( shift, join ',', @_ );
+  $self->write( shift, ( join ',', @_ ), " " );
 }
 
 sub digitalWrite ($$) {
@@ -164,25 +157,34 @@ sub analogRead ($$) {
   $self->cmd( 'R', @_ );
 }
 
+sub tone ($$) {
+  my $self = shift if ref $_[0];
+  $self->cmd( ( $_[2] ? 'T' : 't' ), @_ );
+}
+
+sub noTone ($) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 't', $_[0], '0' );
+}
+
 =todo
-tone() 
-noTone()
 pulseIn()
 =cut
 unless (caller) {
   sub {
-  local $| = 1;
-  my $port = __PACKAGE__->new(
-    #'baudrate'=>9600,
-    debug    => 1,
-    waitinit => 1,
-  ) or return;
-  #sleep 1,
-  $port->write( $_ . ' ' ), $port->say for @ARGV;
-  #sleep 10;
-  my $t = time;
-  local $SIG{INT} = sub { $t = 0; };
-  $port->say while time - $t < 60;
-  }->();
+    local $| = 1;
+    my $port = __PACKAGE__->new(
+      #'baudrate'=>9600,
+      debug => 1, waitinit => 1,
+      #path=>'COM1',
+    ) or return;
+    #sleep 1,
+    $port->write( $_ . ' ' ), $port->say for @ARGV;
+    #sleep 10;
+    my $t = time;
+    local $SIG{INT} = sub { $t = 0; };
+    $port->say while time - $t < 60;
+    }
+    ->();
 }
 1;
