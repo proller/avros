@@ -21,6 +21,18 @@
 
 //#define DEBUG 1
 
+/* // disable functions to reduce binary size
+#define EPROM 0         // e, E
+#define MONITOR 0	// M
+#define TONE 0          // t, T
+#define PULSE 0		// p, P
+#define REPORT 0	// silent mode
+#define TEST 0		// l, L
+*/
+
+//#define PIN_ANALOG_FROM 14  // A0 error: for old version of arduino lib (0018)
+//#define PIN_LAST 21  // A7, A14 error
+
 #include "avros.h"
 
 

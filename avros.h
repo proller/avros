@@ -1,6 +1,6 @@
 /* $Id$
- Arduino serial protocol v0.1
- <Oleg Alexeenkov> proler@gmail.com http://pro.setun.net
+ Arduino serial protocol v0.1 http://code.google.com/p/avros/
+ <Oleg Alexeenkov> proler@gmail.com http://pro.setun.net 
 
  -
  - Human/script readable-writeable (via terminal like putty (char-by-char input) or.. os command line)
@@ -194,19 +194,21 @@
 #endif
 
 #if !defined(PIN_LAST)
-//#define PIN_LAST 21 // 0-21
+//#define PIN_LAST 21 // 0..21 0..69
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define PIN_LAST A15
+#define PIN_LAST A15 // 69
 #else
-#define PIN_LAST A7
+#define PIN_LAST A7  // 21
 #endif
 #endif
 
 #if !defined(PIN_ANALOG_FROM)
-//#define PIN_ANALOG_FROM 14 //due
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 //#define PIN_ANALOG_FROM 54 //mega
+#else
+//#define PIN_ANALOG_FROM 14 //due
+#endif
 #define PIN_ANALOG_FROM A0 //auto from WProgram.h
-
 #endif
 
 //#define PIN_SRC 2  //execute from eprom if pin HIGH=1 // pin MUST be connected to gnd(0) or +(1)
@@ -239,6 +241,19 @@
 #define AUTO_MODE 1
 #endif
 
+#if !defined(TONE)
+#define TONE 1
+#endif
+
+#if !defined(PULSE)
+#define PULSE 1
+#endif
+
+#if !defined(TEST)
+#define TEST 1
+#endif
+
+
 //#define BINARY // TODO NOT FINISHED
 
 
@@ -269,7 +284,7 @@ int  read_eprom = 0;
 int  serial_buf = -1;
 
 #if MONITOR
-int  monitor_pin[PIN_LAST + 1] = {
+int  monitor_pin[PIN_LAST + 1] = { // using arduino 0018 or earlier  possible error, to fix: #define PIN_LAST 21
 };
 int  monitor_last[PIN_LAST + 1] = {
 };
@@ -432,6 +447,7 @@ byte read_pin(bool flush =
     return pin;
 }
 
+#if PULSE
 void pulseOut(byte pin, unsigned int us)
 {
     digitalWrite(pin, HIGH);
@@ -439,6 +455,7 @@ void pulseOut(byte pin, unsigned int us)
     delayMicroseconds(us);
     digitalWrite(pin, LOW);
 }
+#endif
 
 #if SERVO
 byte servo_attach(byte pin)
@@ -590,6 +607,7 @@ int cmd_parse(int cmd)
             Serial.println("S");
 #endif
             break;
+#if TONE
         case 't':
             pin = read_pin();
             value = read_num(5);
@@ -620,6 +638,7 @@ int cmd_parse(int cmd)
             Serial.print(READ_SEPARATOR);
             Serial.println(value_ul);
 #endif
+#endif
             break;
             /* bad idea    case 'T':
                     pin = read_pin();
@@ -647,6 +666,7 @@ int cmd_parse(int cmd)
 #endif
             //write your commands here
             // Example:
+#if TEST
             // l 	= led on
             // L	= led off
         case 'l':
@@ -663,6 +683,8 @@ int cmd_parse(int cmd)
             Serial.println("L");
 #endif
             break;
+#endif
+#if PULSE
         case 'p':
             pin = read_pin();
             //pinMode(pin, INPUT);
@@ -690,6 +712,8 @@ int cmd_parse(int cmd)
             Serial.println(value);
 #endif
             break;
+#endif
+
 #if SERVO
         case 'Z':
             pin = read_pin();
