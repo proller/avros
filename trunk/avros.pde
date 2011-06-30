@@ -81,7 +81,6 @@ void loop()
             break;
     }
     /* //variant2 with your parser first
-    |
     int cmd = read_chr(READ_TIMEOUT_FIRST);
     switch (cmd) {
     case 'c'
