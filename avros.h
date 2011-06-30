@@ -284,9 +284,15 @@ int  read_eprom = 0;
 int  serial_buf = -1;
 
 #if MONITOR
-int  monitor_pin[PIN_LAST + 1] = { // using arduino 0018 or earlier  possible error, to fix: #define PIN_LAST 21
+#if !defined(MONITOR_FIRST)
+#define MONITOR_FIRST 0
+#endif
+#if !defined(MONITOR_LAST)
+#define MONITOR_LAST PIN_LAST
+#endif
+int  monitor_pin[MONITOR_LAST + 1] = { // using arduino 0018 or earlier  possible error, to fix: #define PIN_LAST 21
 };
-int  monitor_last[PIN_LAST + 1] = {
+int  monitor_last[MONITOR_LAST + 1] = {
 };
 #endif
 
@@ -315,7 +321,7 @@ void print_pin_sep(byte pin)
 #if MONITOR
 void monitor()
 {
-    for (byte i = 0; i <= PIN_LAST; ++i) {
+    for (byte i = MONITOR_FIRST; i <= MONITOR_LAST; ++i) {
         //#if DEBUG
         //Serial.print("MT:");
         //print_pin_sep(i);
@@ -554,7 +560,7 @@ int cmd_parse(int cmd)
         case 'M':
             pin = read_pin();
             value = read_num(4);
-            monitor_pin[pin] = value;
+            if(pin >= MONITOR_FIRST and pin <= MONITOR_LAST) monitor_pin[pin] = value;
 #if REPORT
             Serial.print("M");
             print_pin_sep(pin);
