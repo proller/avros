@@ -33,6 +33,9 @@
 //#define PIN_ANALOG_FROM 14  // A0 error: for old version of arduino lib (0018)
 //#define PIN_LAST 21  // A7, A14 error
 
+//#define MONITOR_FIRST 10 //smaller and faster monitor check loop, only for 5 pin
+//#define MONITOR_LAST 14
+
 #include "avros.h"
 
 
