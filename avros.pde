@@ -83,9 +83,24 @@ void loop()
     /* //variant2 with your parser first
     int cmd = read_chr(READ_TIMEOUT_FIRST);
     switch (cmd) {
-    case 'c'
-    	// your command code
-    default:
-    	cmd_parse(cmd);
+        case 'c'
+            // your command code
+            break;
+        default:
+    	    cmd_parse(cmd);
+            break;
+    }
     */
+    /* //variant3 with command prefix $
+    int cmd = read_chr(READ_TIMEOUT_FIRST);
+    switch (cmd) {
+        //case 'x': // your commands
+        //    break;
+        case '$': // lib commands starting from $: example:  $w13,1
+  	    cmd_parse( read_chr() );
+            break;
+    }
+    */
+
+
 }
