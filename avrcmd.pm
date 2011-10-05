@@ -37,6 +37,7 @@ sub read() {
     $ret .= $char;
     #}
   }
+  $self->parse($ret);
   return $ret;
 }
 
@@ -61,9 +62,12 @@ sub new {
   my $self  = {@_};
   if ( ref $class eq __PACKAGE__ ) { $self = $class; }
   else                             { bless( $self, $class ) unless ref $class; }
-  #my (%config) = @_;
-  #warn %config;
+  $self->{split}   //= qr/\n/;
+  $self->{handler} //= {
+    qr{^R} => sub { warn("readed[$_[0] by $_[1]]") }
+  };
   $self->{path} //= $self->{com};
+
   unless ( $self->{path} ) {
     if ( $^O =~ /^(ms|cyg)?win/i ) {
       $self->{try_from} //= 0;
@@ -167,10 +171,68 @@ sub noTone ($) {
   $self->cmd( 't', $_[0], '0' );
 }
 
+sub delay($) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'd', @_ );
+}
+
+sub delayMicroseconds($) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'D', @_ );
+}
+
+sub EEPROM_read() {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'e', @_ );
+}
+
+sub pulseIn($) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'p', @_ );
+}
+
+sub pulseOut($$) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'P', @_ );
+}
+#avros only
+sub monitor ($$) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'M', @_ );
+}
+
+sub servo_attach($) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'y', @_ );
+}
+
+sub servo_read($) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'z', @_ );
+}
+
+sub servo_write($$) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'Z', @_ );
+}
+
+sub parse ($) {
+  my $self = shift if ref $_[0];
+  for my $string ( map { split $self->{split}, $_ } @_ ) {
+    for ( keys %{ $self->{handler} || {} } ) {
+      next unless $string =~ $_;
+      $self->{handler}{$_}->( $string, $_ ) if ref $self->{handler}{$_} eq 'CODE';
+    }
+  }
+}
+
 =todo
 pulseIn()
 =cut
 unless (caller) {
+  #parse("test");
+  #parse("R0");
+  #parse("R1\nR2\n");
   sub {
     local $| = 1;
     my $port = __PACKAGE__->new(
