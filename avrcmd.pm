@@ -18,32 +18,40 @@ to set com props you can start manually:
 mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 
 =cut
+
 #our %config;
 package avrcmd;
 use strict;
 use Time::HiRes qw(time sleep);
+#use Data::Dumper;
 #our $port;
-my @porttry;
+#my @porttry;
 #my $portpath;
-sub read() {
+sub read(;$) {
   my $self = shift if ref $_[0];
   #Poll to see if any data is coming in
   return unless $self->{port};
+  my $end = time + $_[0];
   my $ret;
-  while ( length( my $char = $self->{port}->lookfor() ) ) {
-    #If we get data, then print it
-    #if ( length $char ) {
-    #print "Recd [$char] \n";    #return $char;
-    $ret .= $char;
-    #}
-  }
-  $self->parse($ret);
+  do {
+    #print '.';
+    while ( length( my $char = $self->{port}->lookfor() ) ) {
+      #If we get data, then print it
+      #if ( length $char ) {
+      #print "Recd [$char] \n";    #return $char;
+      $ret .= $char;
+      #}
+    }
+    #warn "[$ret]", ' ', time, ' ', $end if $ret;
+    $self->parse($ret);
+    sleep $self->{sleep} unless length $ret;
+  } while !length $ret and time < $end;
   return $ret;
 }
 
-sub say() {
+sub say(;$) {
   my $self = shift if ref $_[0];
-  local $_ = $self->read;
+  local $_ = $self->read(@_);
   #local $_ = rd;
   #print "read[", $_, "]" if length $_;
   print $_, "\n" if length $_;
@@ -66,33 +74,35 @@ sub new {
   $self->{handler} //= {
     qr{^R} => sub { warn("readed[$_[0] by $_[1]]") }
   };
-  $self->{path} //= $self->{com};
+  $self->{path}  //= $self->{com};
+  $self->{wait}  //= 2;
+  $self->{sleep} //= 0.01;
 
   unless ( $self->{path} ) {
     if ( $^O =~ /^(ms|cyg)?win/i ) {
       $self->{try_from} //= 0;
       $self->{try_to}   //= 30;
-      push @porttry, map { "COM$_" } reverse $self->{try_from} .. $self->{try_to};    #reverse
+      push @{ $self->{porttry} ||= [] }, map { "COM$_" } reverse $self->{try_from} .. $self->{try_to};    #reverse
     } else {
       $self->{try_from} //= 0;
       $self->{try_to}   //= 3;
       if ( $^O eq 'freebsd' ) {
-        push @porttry, map { "/dev/cuaU$_" } $self->{try_from} .. $self->{try_to};
+        push @{ $self->{porttry} ||= [] }, map { "/dev/cuaU$_" } $self->{try_from} .. $self->{try_to};
       } else {
-        push @porttry, reverse map { "/dev/ttyUSB$_" } $self->{try_from} .. $self->{try_to};
+        push @{ $self->{porttry} ||= [] }, reverse map { "/dev/ttyUSB$_" } $self->{try_from} .. $self->{try_to};
       }
     }
   }
-  for ( $self->{path} ? $self->{path} : @porttry ) {
+  for ( $self->{path} ? $self->{path} : @{ $self->{porttry} || [] } ) {
     print "try [$_]\n" if $self->{debug};
-    $self->{path} = $_, last if -e;
-    #}
+    $self->{path} = $_ if -e;
     next unless $self->{path};
     print "selected port [$self->{path}] [$^O]\n" if $self->{debug};
+    #warn $^O;
     if ( $^O =~ /^(ms)?win/i ) {
-      eval q{use Win32::SerialPort; };
+      eval q{use Win32::SerialPort;};
       $self->{port} = Win32::SerialPort->new( $self->{path} ) unless $@;
-      #warn "not opened [$self->{path}]" unless $self->{port};
+      warn "not opened [$self->{path}] [$@]" unless $self->{port};
     }
     #$quiet
     #|| die "Can't open $self->{port}Name: $^E\n";    # $quiet is optional
@@ -101,8 +111,10 @@ sub new {
       #my $self->{port} = Device::SerialPort->new("/dev/tty.usbserial");
       #my $self->{port} = Device::SerialPort->new("COM2");
       $self->{port} = Device::SerialPort->new( $self->{path} ) unless $@;
+      warn "not opened [$self->{path}] [$@]" unless $self->{port};
     }
     #die " Can't open port"
+    #warn Dumper $self->{port};
     last if $self->{port};
   }
   return unless $self->{port};
@@ -126,7 +138,11 @@ sub new {
     print "waiting init..\n" if $self->{debug};
     my $n = 0;
     local $SIG{INT} = sub { $n = 99999; };
-    print('i'), sleep 1, $_ = $self->say while $n++ < 10 and !/I/;
+    local $| = 1;
+    print('i'),
+      #sleep 1,
+      $_ = $self->say(1) while $n++ < 10 and !/I/;
+    #warn "init[$_]";
   }
   return $self;
 }
@@ -151,12 +167,22 @@ sub pinMode ($$) {
   $self->cmd( 'm', @_ );
 }
 
-sub digitalRead ($$) {
+sub digitalRead ($) {
   my $self = shift if ref $_[0];
+  my $ret;
+  #warn "dcmdgo";
+  local $self->{handler}{qr{r(?<pin>$_[0]),(?<state>\d+)}} = sub {
+    #print "DR:pin $_[0] changed", Dumper \@_;
+    $ret = $_[1]{state};
+  };
   $self->cmd( 'r', @_ );
+  my $tries = 3;
+  #warn ("dreadgo[$self->{wait}][$ret]:"),
+  $self->read( $self->{wait} ) while !length $ret and --$tries > 0;
+  $ret;
 }
 
-sub analogRead ($$) {
+sub analogRead ($) {
   my $self = shift if ref $_[0];
   $self->cmd( 'R', @_ );
 }
@@ -219,9 +245,10 @@ sub servo_write($$) {
 sub parse ($) {
   my $self = shift if ref $_[0];
   for my $string ( map { split $self->{split}, $_ } @_ ) {
+    #warn "parse[$string]";
     for ( keys %{ $self->{handler} || {} } ) {
       next unless $string =~ $_;
-      $self->{handler}{$_}->( $string, $_ ) if ref $self->{handler}{$_} eq 'CODE';
+      $self->{handler}{$_}->( $string, \%+, $_ ) if ref $self->{handler}{$_} eq 'CODE';
     }
   }
 }
@@ -229,6 +256,7 @@ sub parse ($) {
 =todo
 pulseIn()
 =cut
+
 unless (caller) {
   #parse("test");
   #parse("R0");
