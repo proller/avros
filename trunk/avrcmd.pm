@@ -191,14 +191,16 @@ sub pinMode ($$) {
 sub digitalRead ($) {
   my $self = shift if ref $_[0];
   my $ret;
-  warn "dcmdgo";
+  #warn "dcmdgo";
   local $self->{handler}{qr{r(?<pin>$_[0]),(?<state>\d+)}} = sub {
+    my $self = shift if ref $_[0];
     #print "DR:pin $_[0] changed", Dumper \@_;
     $ret = $_[1]{state};
   };
   $self->cmd( 'r', @_ );
   my $tries = 3;
-  warn("dreadgo[$self->{wait}][$ret]:"), $self->read( $self->{wait} ) while !length $ret and --$tries > 0;
+  #warn("dreadgo[$self->{wait}][$ret]:"),
+  $self->read( $self->{wait} ) while !length $ret and --$tries > 0;
   $ret;
 }
 
@@ -268,7 +270,7 @@ sub parse ($) {
     #warn "parse[$string]";
     for ( keys %{ $self->{handler} || {} } ) {
       next unless $string =~ $_;
-      $self->{handler}{$_}->( $string, \%+, $_ ) if ref $self->{handler}{$_} eq 'CODE';
+      $self->{handler}{$_}->( $self, $string, \%+, $_ ) if ref $self->{handler}{$_} eq 'CODE';
     }
   }
 }
@@ -284,6 +286,7 @@ unless (caller) {
       debug => 1, waitinit => 1,
       #path=>'COM1',
     ) or return;
+    #print("[$_]"),
     $port->write( $_ . ' ' ), $port->say for @ARGV;
     my $t = time;
     local $SIG{INT} = sub { $t = 0; };
