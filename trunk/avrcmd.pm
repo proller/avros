@@ -18,6 +18,7 @@ to set com props you can start manually:
 mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 
 =cut
+
 #our %config;
 package avrcmd;
 use strict;
@@ -278,6 +279,7 @@ sub parse ($) {
 =todo
 pulseIn()
 =cut
+
 unless (caller) {
   sub {
     local $| = 1;
