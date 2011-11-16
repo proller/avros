@@ -5,21 +5,18 @@
 # demo: touch pin 4 to increase led blinking speed, pin 3 to decrease
 #
 #
+package button;
 use strict;
 use Data::Dumper;
 #use Time::HiRes;
 use lib::abs qw(..);
 use avrcmd;
 #my $pin  = 3;
-my @pin    = ( 3 .. 10 );
-my %action = (
-  3 => {
-    1 => sub { my $port = shift if ref $_[0]; $port->cmd('+') },
-  },
-  4 => {
-    1 => sub { my $port = shift if ref $_[0]; $port->cmd('-') },
-  },
-);
+our @pin    = ( 3 .. 10 );
+our %action = ();
+do +lib::abs::path('') . '/button.config.pl';
+warn "in conf: $@" if $@;
+#warn Dumper \@pin, \%action;
 my $port = avrcmd->new(
   #'baudrate'=>9600,
   debug => 1, waitinit => 1,
