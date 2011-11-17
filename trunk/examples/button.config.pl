@@ -1,11 +1,12 @@
 use strict;
-@button::pin = ( 2 .. 5 );
+#@button::pin = ( 2 .. 5 );
 $button::action{2} = {
-  0 => sub {
+  1 => sub {
     my $port = shift if ref $_[0];
     our $time;
     warn('skip, too fast'), return if $time + 60 > time;
-    warn "go! ", $time, ":\n", `ssh somehost somecommand`;
+    warn "go! ";
+    warn $time, ":\n", `ssh somehost somecommand`;
     $time = time;
   },
 };

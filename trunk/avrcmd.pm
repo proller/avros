@@ -18,7 +18,6 @@ to set com props you can start manually:
 mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 
 =cut
-
 #our %config;
 package avrcmd;
 use strict;
@@ -173,6 +172,11 @@ sub cmd ($;@) {
   my $self = shift if ref $_[0];
   $self->write( shift, ( join ',', @_ ), " " );
 }
+# arduino/hardware/arduino/cores/arduino/wiring.h
+sub HIGH ()   { 1 }
+sub LOW ()    { 0 }
+sub INPUT ()  { 0 }
+sub OUTPUT () { 1 }
 
 sub digitalWrite ($$) {
   my $self = shift if ref $_[0];
@@ -279,7 +283,6 @@ sub parse ($) {
 =todo
 pulseIn()
 =cut
-
 unless (caller) {
   sub {
     local $| = 1;
