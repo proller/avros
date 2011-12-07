@@ -1,6 +1,6 @@
 /* $Id$
  Arduino serial protocol v0.1 http://code.google.com/p/avros/
- <Oleg Alexeenkov> proler@gmail.com http://pro.setun.net 
+ <Oleg Alexeenkov> proler@gmail.com http://pro.setun.net
 
  -
  - Human/script readable-writeable (via terminal like putty (char-by-char input) or.. os command line)
@@ -719,7 +719,6 @@ int cmd_parse(int cmd)
 #endif
             break;
 #endif
-
 #if SERVO
         case 'Z':
             pin = read_pin();
