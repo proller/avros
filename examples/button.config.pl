@@ -6,8 +6,7 @@ $button::action{2} = {
     our $time;
     warn('skip, too fast'), return if $time + 60 > time;
     warn "go! ";
-    #warn $time, ":\n", `ssh somehost somecommand`;
-    warn $time, ":\n", `ssh w-dev4 /opt/www/morda/debian/package.pl`;
+    warn $time, ":\n", `ssh somehost somecommand`;
     $time = time;
   },
 };
