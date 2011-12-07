@@ -291,7 +291,7 @@ clean:
 
 tidy:
 	astyle -A3 -p --indent-switches --indent-preprocessor --lineend=linux --delete-empty-lines *.pde *.h
-	perltidy -b *.pl *.pm
+	perltidy -b  -i=2 -ce -l=128 -nbbc -sob -otr -sot *.pl *.pm *.PL examples/*.pl
 
 .PHONY:	all build elf hex eep lss sym program coff extcoff clean applet_files sizebefore sizeafter
 

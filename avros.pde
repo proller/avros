@@ -97,10 +97,8 @@ void loop()
         //case 'x': // your commands
         //    break;
         case '$': // lib commands starting from $: example:  $w13,1
-  	    cmd_parse( read_chr() );
+        cmd_parse( read_chr() );
             break;
     }
     */
-
-
 }

@@ -20,14 +20,16 @@ warn "in conf: $@" if $@;
 @pin = sort keys %action;
 my $port = avrcmd->new(
   #'baudrate'=>9600,
-  debug => 1, waitinit => 1,
+  debug    => 1,
+  waitinit => 1,
   #path=>'COM1',
   handler => {
     map {
       qr{r(?<pin>$_),(?<state>\d+)} => sub {
         my $port = shift if ref $_[0];
         print "pin changed", Dumper( $_[1] ), "\n";
-        $action{ $_[1]{pin} }{ $_[1]{state} }->($port) if ref $action{ $_[1]{pin} }{ $_[1]{state} } eq 'CODE';
+        $action{ $_[1]{pin} }{ $_[1]{state} }->($port)
+          if ref $action{ $_[1]{pin} }{ $_[1]{state} } eq 'CODE';
         }
       } @pin
   },
