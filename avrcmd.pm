@@ -18,7 +18,6 @@ to set com props you can start manually:
 mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 
 =cut
-
 #our %config;
 package avrcmd;
 use strict;
@@ -56,14 +55,11 @@ sub schedule($$;@) {    #$Id: psmisc.pm 4690 2011-10-21 10:56:26Z pro $ $URL: sv
   $p = $every if ref $every eq 'HASH';
   $p->{'every'} ||= $every if !ref $every;
   $p->{'id'} ||= join ';', caller;
-  #dmp $p, \%schedule;
-  #dmp $schedule{ $p->{'id'} }{'runs'}, $p->{'runs'}, $p, $schedule{ $p->{'id'} } if $p->{'runs'};
   $schedule{ $p->{'id'} }{'func'} = $func
     if !$schedule{ $p->{'id'} }{'func'}
       or $p->{'update'};
   $schedule{ $p->{'id'} }{'last'} = time - $p->{'every'} + $p->{'wait'}
     if $p->{'wait'} and !$schedule{ $p->{'id'} }{'last'};
-  #dmp("RUN", $p->{'id'}),
   ++$schedule{ $p->{'id'} }{'runs'}, $schedule{ $p->{'id'} }{'last'} = time, $schedule{ $p->{'id'} }{'func'}->(@_),
         if ( $schedule{ $p->{'id'} }{'last'} + $p->{'every'} < time )
     and ( !$p->{'runs'} or $schedule{ $p->{'id'} }{'runs'} < $p->{'runs'} )
@@ -82,38 +78,13 @@ sub debug (@) {
 sub check () {
   my $self = shift if ref $_[0];
   #$self->debug('chk run', caller 3);
-  #dmp('chk run', caller );
   if ( !$self->{port} ) {    # or !exists $self->{'inited'}
-    dmp 'noport';
-    #return 'no init' unless
     if ( !$self->port_try( $self->{wait} ) and $self->{path} ) {
       delete $self->{path};
       $self->port_try( $self->{wait} );
     }
-    #dmp 'istart', $self;
-    #return 'no init' unless $self->init();
-    #dmp 'op';
   }
-
-=no
-    dmp 'ch', $self->{'inited'}, $self;
-    if(!exists $self->{'inited'} and !$self->init()) {
-      delete $self->{path};
-    #dmp 'aop';
-      $self->port_try();
-      #dmp('no init'),
-      return 'no init' unless $self->init();
-    #return 'no init';
-    }
-=cut
-
   return 'no port' unless $self->{port};
-  #dmp scalar $self->{port}->status();
-  #my @status = $self->{port}->status();
-  #$self->debug( Dumper \@status );
-  #$self->debug('no status, reopening'), $self->open( $self->{wait} ), $self->init() if @status <= 1;
-  #$self->debug('no status, reopening'), $self->port_try( $self->{wait} ), $self->init() if @status <= 1;
-  #if (@status <= 1) {
   if ( $self->{port}->status() <= 1 ) {
     $self->debug("no status, reopening [$self->{path}]");
     $self->port_try( $self->{wait} );
@@ -124,7 +95,6 @@ sub check () {
     }
   }
   if ( $self->{waitinit} and !$self->{'inited'} ) {
-    #dmp 'reinit', $self->{waitinit} , $self->{'inited'};
     schedule(
       { wait => 10, every => 10 },
       our $___report ||= sub {
@@ -135,9 +105,7 @@ sub check () {
       },
       $self
     );
-    #dmp $self->{'inited'};
   }
-  #  schedule
   return 'cant reopen port' unless $self->{port};
   return;
 }
@@ -206,10 +174,17 @@ sub open (;$) {
 sub port_try {
   my $self = shift if ref $_[0];
   #dmp caller;
-  dmp "port_try[$self->{path}]", $self->{porttry}, caller;
-  for my $path ( $self->{path} ? $self->{path} : @{ $self->{porttry} || [] } ) {
+  dmp "port_try[$self->{path}]", $self->{ports}, caller;
+  for my $path (
+      $self->{path}
+    ? $self->{path}
+    : sort { $self->{ports}{$a} <=> $self->{ports}{$b} || $b cmp $a }
+    keys %{ $self->{ports} || {} }
+    )
+  {
     delete $self->{path};
-    $self->debug("try [$path]");
+    ++$self->{ports}{$path};
+    $self->debug("try [$path]($self->{ports}{$path}) ");
     $self->{path} = $path if -e $path;
     next unless $self->{path};
     $self->debug("selected port [$self->{path}] [$^O]");
@@ -242,33 +217,23 @@ sub new {
   unless ( $self->{path} ) {
     if ( $^O =~ /^(ms|cyg)?win/i ) {
       $self->{try_from} //= 0;
-      $self->{try_to}   //= 30;
-      push @{ $self->{porttry} ||= [] }, map { "COM$_" }
+      $self->{try_to}   //= 9;
+      #push @{ $self->{port_try} ||= [] },
+      map { ++$self->{ports}{"COM$_"} }
         reverse $self->{try_from} .. $self->{try_to};    #reverse
     } else {
       $self->{try_from} //= 0;
       $self->{try_to}   //= 3;
       if ( $^O eq 'freebsd' ) {
-        push @{ $self->{porttry} ||= [] }, map { "/dev/cuaU$_" } $self->{try_from} .. $self->{try_to};
+        #push @{ $self->{ports} ||= [] },
+        map { $self->{ports}{"/dev/cuaU$_"} } $self->{try_from} .. $self->{try_to};
       } else {
-        push @{ $self->{porttry} ||= [] }, reverse map { "/dev/ttyUSB$_" } $self->{try_from} .. $self->{try_to};
+        #push @{ $self->{port_try} ||= [] }, reverse
+        map { $self->{ports}{"/dev/ttyUSB$_"} } $self->{try_from} .. $self->{try_to};
       }
     }
   }
-
-=no
-  while (--$self->{port_finds} >= 0 ) {
-   next unless $self->port_try();
-    print "try find port [$self->{port_finds}] = [$self->{port}]\n";
-    next unless $self->{port};
-    $self->debug( map { $self->{$_} . ' ' } qw(path baudrate databits parity stopbits) );
-    dmp("init ok\n"), last if $self->init();
-  }
-=cut
-
-  #dmp 'newok' ;
   $self->check();
-  #dmp 'chkok' ;
   return $self;
 }
 
@@ -300,19 +265,13 @@ sub init () {
     local $SIG{INT} = sub { $n = -1; };
     local $| = 1;
     while ( --$n >= 0 ) {
-      #print("i[$n]");
       $_ = $self->say(1);
-      #print('!IOK!'),
       ++$self->{'inited'}, last if /I/;
-      #print "nok;";
     }
-    #print "\ncycled\n";
   }
-  #print "inited = [$self->{'inited'}]\n";
   $self->{init}->($self)
     if ref $self->{init} eq 'CODE'
       and ( !$self->{'waitinit'} or $self->{'inited'} );
-  #print "init end[$self->{'inited'}]\n";
   return $self->{'inited'} || !$self->{'waitinit'};
 }
 
@@ -432,7 +391,6 @@ sub parse ($) {
 =todo
 pulseIn()
 =cut
-
 unless (caller) {
   sub {
     local $| = 1;

@@ -306,7 +306,12 @@ void sp_setup()
 #endif
 #endif
 #if REPORT
+#if defined(DEVICEID)
+    Serial.print("I");
+    Serial.println(DEVICEID, DEC);
+#else
     Serial.println("I");
+#endif
 #endif
 }
 
