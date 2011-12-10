@@ -197,7 +197,6 @@ sub port_try {
   delete $self->{port};
   delete $self->{path};
   sleep $self->{wait};
-  #dmp 'no porttry', $self->{path};
   return;
 }
 
@@ -266,7 +265,7 @@ sub init () {
     local $| = 1;
     while ( --$n >= 0 ) {
       $_ = $self->say(1);
-      ++$self->{'inited'}, last if /I/;
+      ++$self->{'inited'}, last if /I$self->{'deviceid'}/;
     }
   }
   $self->{init}->($self)

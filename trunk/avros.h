@@ -257,7 +257,9 @@
 //#define BINARY // TODO NOT FINISHED
 
 
-#include "WProgram.h"
+//#include "WProgram.h" //before arduino 1.0
+#include "Arduino.h"
+
 
 #if EPROM
 #include "EEPROM.h"
