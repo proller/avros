@@ -4,7 +4,8 @@
 
 //includes for your bunny processing - must include files here, not in .h
 //if you use Makefile - you can delete #include's from here
-#include "WProgram.h"
+//#include "WProgram.h" //before arduino 1.0
+#include "Arduino.h"
 //#define EPROM 0 // disable
 //#define EPROM 128 // allow to use only first 128 bytes, default 512
 #if EPROM || !defined(EPROM)
