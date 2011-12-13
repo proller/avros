@@ -99,7 +99,8 @@ sub check () {
       { wait => 10, every => 10 },
       our $___report ||= sub {
         my $self = shift if ref $_[0];
-        #dmp "no init, findnextport";
+        #dmp "no init, findnextport[$self->{'inited'}]", $self;
+        $self->{'inited'} = 0, return unless exists $self->{'inited'}; #skip first
         delete $self->{path};
         $self->port_try( $self->{wait} );
       },
@@ -174,7 +175,7 @@ sub open (;$) {
 sub port_try {
   my $self = shift if ref $_[0];
   #dmp caller;
-  dmp "port_try[$self->{path}]", $self->{ports}, caller;
+  #dmp "port_try[$self->{path}]", $self->{ports}, caller;
   for my $path (
       $self->{path}
     ? $self->{path}
