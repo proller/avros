@@ -189,10 +189,6 @@
 #define SPEED 115200 // 300, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200,
 #endif
 
-#if !defined(EPROM)
-#define EPROM 512
-#endif
-
 #if !defined(PIN_LAST)
 //#define PIN_LAST 21 // 0..21 0..69
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
@@ -260,9 +256,16 @@
 //#include "WProgram.h" //before arduino 1.0
 #include "Arduino.h"
 
+#if (defined(EEPROM_h) and !defined(EPROM)) or !defined(EPROM)  //already included, using
+#define EPROM 512
+#endif
 
 #if EPROM
 #include "EEPROM.h"
+#endif
+
+#if defined(Servo_h) and !defined(SERVO) //already included, using
+#define SERVO 1
 #endif
 
 #if SERVO
