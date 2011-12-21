@@ -34,7 +34,8 @@
 #
 # $Id$
 
-# freebsd: devel/avrdude devel/avr-gcc
+# freebsd: portinstall devel/avrdude devel/avr-gcc devel/avr-libc devel/arduino
+# linux:   apt-get -y install gcc-avr avr-libc avrdude
 
 TARGET = $(notdir $(CURDIR))
 #INSTALL_DIR = $(HOME)/arduino-0022
@@ -63,15 +64,16 @@ VERSION ?=	22
 ARDUINO ?= $(INSTALL_DIR)/hardware/arduino/cores/arduino
 ARDUINO_LIB ?= $(INSTALL_DIR)/libraries
 AVRDUDE_PATH ?= $(INSTALL_DIR)/hardware/tools
+VARIANT ?= standard
 C_MODULES =  \
 $(ARDUINO)/wiring_pulse.c \
 $(ARDUINO)/wiring_analog.c \
-$(ARDUINO)/pins_arduino.c \
 $(ARDUINO)/wiring.c \
 $(ARDUINO)/wiring_digital.c \
 $(ARDUINO)/WInterrupts.c \
 $(ARDUINO)/wiring_shift.c \
 # end of C_MODULES
+#$(ARDUINO)/pins_arduino.c \
 
 CXX_MODULES = \
 $(ARDUINO)/Tone.cpp \
@@ -107,7 +109,7 @@ CDEFS = -DF_CPU=$(F_CPU)L -DARDUINO=$(VERSION)
 CXXDEFS = -DF_CPU=$(F_CPU)L -DARDUINO=$(VERSION)
 
 # Place -I options here
-CINCS = -I$(ARDUINO) -I$(ARDUINO_LIB) -I$(ARDUINO_LIB)/EEPROM -I$(ARDUINO_LIB)/Servo -I./
+CINCS = -I$(ARDUINO) -I$(ARDUINO_LIB) -I$(ARDUINO_LIB)/EEPROM -I$(ARDUINO_LIB)/Servo -I./ -I $(INSTALL_DIR)/hardware/arduino/variants/$(VARIANT)/
 #CXXINCS = -I$(ARDUINO) -I$(ARDUINO_LIB) -I$(ARDUINO_LIB)/EEPROM
 CXXINCS = $(CINCS)
 

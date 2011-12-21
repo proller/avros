@@ -12,6 +12,9 @@ perl avrcmd.pm + + + M0,1 M1,1 - - - .
 cpan Device::SerialPort
 cpan Win32::SerialPort
 
+freebsd:
+comms/p5-Device-SerialPort
+
 windows:
 choice com port number 0-9 (you cant access from commandline to coms >=10)
 to set com props you can start manually:
@@ -85,7 +88,7 @@ sub check () {
     }
   }
   return 'no port' unless $self->{port};
-  if ( $self->{port}->status() <= 1 ) {
+  if ($self->{port}->can_status() and $self->{port}->status() <= 1 ) {
     $self->debug("no status, reopening [$self->{path}]");
     $self->port_try( $self->{wait} );
     if ( !$self->{port} ) {
@@ -159,11 +162,13 @@ sub open (;$) {
   if ( $^O =~ /^(ms)?win/i and use_try 'Win32::SerialPort' ) {
     $self->{port} = Win32::SerialPort->new( $self->{path} );    # unless $@;
     warn "not opened [$self->{path}] [$@]" unless $self->{port};
-  }
-  if ( !$self->{port} and use_try 'Device::SerialPort' ) {
+  } elsif ( !$self->{port} and use_try 'Device::SerialPort' ) {
     $self->{port} = Device::SerialPort->new( $self->{path} );    # unless $@;
     warn "not opened [$self->{path}] [$@]" unless $self->{port};
+  } else {
+    warn 'no good lib [ Device::SerialPort Win32::SerialPort ]';
   }
+  
   return unless $self->{port};
   $self->{port}->baudrate( $self->{'baudrate'} //= 115200 );
   $self->{port}->databits( $self->{'databits'} //= 8 );
@@ -226,10 +231,10 @@ sub new {
       $self->{try_to}   //= 3;
       if ( $^O eq 'freebsd' ) {
         #push @{ $self->{ports} ||= [] },
-        map { $self->{ports}{"/dev/cuaU$_"} } $self->{try_from} .. $self->{try_to};
+        map { ++$self->{ports}{"/dev/cuaU$_"} } $self->{try_from} .. $self->{try_to};
       } else {
         #push @{ $self->{port_try} ||= [] }, reverse
-        map { $self->{ports}{"/dev/ttyUSB$_"} } $self->{try_from} .. $self->{try_to};
+        map { ++$self->{ports}{"/dev/ttyUSB$_"} } $self->{try_from} .. $self->{try_to};
       }
     }
   }
@@ -258,6 +263,7 @@ sub init () {
     $self->debug( $self->{winmode}, "\n", $_ );
     $self->open();
   }
+
   return unless $self->{port};
   if ( $self->{'waitinit'} ) {
     my $n = 10;
