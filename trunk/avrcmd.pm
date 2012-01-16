@@ -88,7 +88,7 @@ sub check () {
     }
   }
   return 'no port' unless $self->{port};
-  if ($self->{port}->can_status() and $self->{port}->status() <= 1 ) {
+  if ((($self->{port}->can('can_status') and $self->{port}->can_status() ) or !$self->{port}->can('can_status')) and $self->{port}->status() <= 1 ) {
     $self->debug("no status, reopening [$self->{path}]");
     $self->port_try( $self->{wait} );
     if ( !$self->{port} ) {
