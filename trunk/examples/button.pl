@@ -31,7 +31,7 @@ my $port = avrcmd->new(
         $action{ $_[1]{pin} }{ $_[1]{state} }->($port)
           if ref $action{ $_[1]{pin} }{ $_[1]{state} } eq 'CODE';
         }
-      } @pin
+    } @pin
   },
   init => sub {
     my $port = shift if ref $_[0];

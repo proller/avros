@@ -21,6 +21,7 @@ to set com props you can start manually:
 mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 
 =cut
+
 #our %config;
 package avrcmd;
 use strict;
@@ -60,7 +61,7 @@ sub schedule($$;@) {    #$Id: psmisc.pm 4690 2011-10-21 10:56:26Z pro $ $URL: sv
   $p->{'id'} ||= join ';', caller;
   $schedule{ $p->{'id'} }{'func'} = $func
     if !$schedule{ $p->{'id'} }{'func'}
-      or $p->{'update'};
+    or $p->{'update'};
   $schedule{ $p->{'id'} }{'last'} = time - $p->{'every'} + $p->{'wait'}
     if $p->{'wait'} and !$schedule{ $p->{'id'} }{'last'};
   ++$schedule{ $p->{'id'} }{'runs'}, $schedule{ $p->{'id'} }{'last'} = time, $schedule{ $p->{'id'} }{'func'}->(@_),
@@ -88,7 +89,9 @@ sub check () {
     }
   }
   return 'no port' unless $self->{port};
-  if ((($self->{port}->can('can_status') and $self->{port}->can_status() ) or !$self->{port}->can('can_status')) and $self->{port}->status() <= 1 ) {
+  if ( ( ( $self->{port}->can('can_status') and $self->{port}->can_status() ) or !$self->{port}->can('can_status') )
+    and $self->{port}->status() <= 1 )
+  {
     $self->debug("no status, reopening [$self->{path}]");
     $self->port_try( $self->{wait} );
     if ( !$self->{port} ) {
@@ -103,7 +106,7 @@ sub check () {
       our $___report ||= sub {
         my $self = shift if ref $_[0];
         #dmp "no init, findnextport[$self->{'inited'}]", $self;
-        $self->{'inited'} = 0, return unless exists $self->{'inited'}; #skip first
+        $self->{'inited'} = 0, return unless exists $self->{'inited'};    #skip first
         delete $self->{path};
         $self->port_try( $self->{wait} );
       },
@@ -143,6 +146,7 @@ sub say(;$) {
 
 sub write (@) {
   my $self = shift if ref $_[0];
+  $self->debug("write [@_]");
   return if $self->check();
   $self->{port}->write( join '', @_ );
 }
@@ -168,12 +172,12 @@ sub open (;$) {
   } else {
     warn 'no good lib [ Device::SerialPort Win32::SerialPort ]';
   }
-  
   return unless $self->{port};
   $self->{port}->baudrate( $self->{'baudrate'} //= 115200 );
   $self->{port}->databits( $self->{'databits'} //= 8 );
   $self->{port}->parity( $self->{'parity'}     //= 'none' );
   $self->{port}->stopbits( $self->{'stopbits'} //= 1 );
+  #$self->debug("port opts [$self->{'baudrate'}]  $self->{'databits'} $self->{'parity'} ");
   return $self->{port};
 }
 
@@ -263,7 +267,6 @@ sub init () {
     $self->debug( $self->{winmode}, "\n", $_ );
     $self->open();
   }
-
   return unless $self->{port};
   if ( $self->{'waitinit'} ) {
     my $n = 10;
@@ -277,7 +280,7 @@ sub init () {
   }
   $self->{init}->($self)
     if ref $self->{init} eq 'CODE'
-      and ( !$self->{'waitinit'} or $self->{'inited'} );
+    and ( !$self->{'waitinit'} or $self->{'inited'} );
   return $self->{'inited'} || !$self->{'waitinit'};
 }
 
@@ -385,7 +388,7 @@ sub servo_write($$) {
 sub parse ($) {
   my $self = shift if ref $_[0];
   for my $string ( map { split $self->{split}, $_ } @_ ) {
-    #warn "parse[$string]";
+    $self->debug("parse[$string]");
     for ( keys %{ $self->{handler} || {} } ) {
       next unless $string =~ $_;
       $self->{handler}{$_}->( $self, $string, \%+, $_ )
@@ -397,6 +400,7 @@ sub parse ($) {
 =todo
 pulseIn()
 =cut
+
 unless (caller) {
   sub {
     local $| = 1;
