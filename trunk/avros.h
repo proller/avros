@@ -98,7 +98,7 @@
 
 
  Arduino pins numbering:
- n	Duemilanove	 Mega
+ n	Duemilanove,Nano Mega
  0	RX               RX
  1	TX               TX
  2 		int      PWM

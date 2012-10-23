@@ -25,6 +25,9 @@ mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 #our %config;
 package avrcmd;
 use strict;
+no strict qw(refs);
+use warnings;
+no warnings qw(uninitialized);
 use Time::HiRes qw(time sleep);
 use Data::Dumper;
 $Data::Dumper::Sortkeys = $Data::Dumper::Useqq = $Data::Dumper::Terse = 1;
@@ -127,6 +130,7 @@ sub read(;$) {
       $ret .= $char;
     }
     $self->parse($ret);
+#warn ("sl[$self->{sleep}]"),
     sleep $self->{sleep} unless length $ret;
   } while !length $ret and time < $end;
   return $ret;
@@ -161,6 +165,7 @@ sub open (;$) {
   my $self = shift if ref $_[0];
   delete $self->{port};
   delete $self->{inited};
+#warn("sleep$_[0]"),
   sleep $_[0] if $_[0];
   $@ = undef;
   if ( $^O =~ /^(ms)?win/i and use_try 'Win32::SerialPort' ) {
@@ -383,6 +388,39 @@ sub servo_read($) {
 sub servo_write($$) {
   my $self = shift if ref $_[0];
   $self->cmd( 'Z', @_ );
+}
+
+sub servo_new {
+    my $self = shift if ref $_[0];
+    my ($name, $c) = @_;
+    $c = $name, $name = undef if ref $name and !$c;
+    $name //= $c->{pin};
+    $self->{servo}{$name} = $c;
+    $c->{start}   //= 64;
+    $c->{end}     //= 250;
+    $c->{trim}    //= 0;
+    $c->{step}    //= 30;
+    $c->{center}  //= $c->{start} + ( ( $c->{end} - $c->{start} ) / 2 ) + $c->{trim};
+    $c->{slow}    //= $c->{center} + $c->{step};
+    $c->{slowrev} //= $c->{center} - $c->{step};
+    $c->{max}     //= $c->{end}; #$c->{center} + $c->{start};
+    $c->{min}     //= $c->{start};
+    #$c->{cmd}     //= 'W';
+    $c->{cmd} //= 'Z';
+    $self->servo_attach( $c->{pin} ) unless $c->{no_attach};
+    $self->servo_cmd($name,  $c->{center}) unless $c->{no_center};
+    
+    $c->{init}->($self, $c) if ref $c->{init} eq 'CODE';
+    return $self->{servo}{$name};
+}
+
+sub servo_cmd {
+    my $self = shift if ref $_[0];
+    my ($name, $value) = @_;
+    my $c = $self->{servo}{$name};
+    $value = $c->{max} if $value > $c->{max};
+    $value = $c->{min} if $value < $c->{min};
+    return $self->cmd($c->{cmd}, $c->{pin}, $c->{last} = int $value);
 }
 
 sub parse ($) {
