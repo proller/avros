@@ -396,31 +396,62 @@ sub servo_new {
     $c = $name, $name = undef if ref $name and !$c;
     $name //= $c->{pin};
     $self->{servo}{$name} = $c;
-    $c->{start}   //= 64;
-    $c->{end}     //= 250;
-    $c->{trim}    //= 0;
-    $c->{step}    //= 30;
-    $c->{center}  //= $c->{start} + ( ( $c->{end} - $c->{start} ) / 2 ) + $c->{trim};
-    $c->{slow}    //= $c->{center} + $c->{step};
-    $c->{slowrev} //= $c->{center} - $c->{step};
+    $c->{start}   //= $c->{min} // 64;
+    $c->{end}     //= $c->{max} // 250;
     $c->{max}     //= $c->{end}; #$c->{center} + $c->{start};
     $c->{min}     //= $c->{start};
+    $c->{trim}    //= 0;
+    $c->{step}    //= 30;
+    $c->{center}  //= $c->{min} + ( ( $c->{end} - $c->{min} ) / 2 ) + $c->{trim};
+    $c->{slow}    //= $c->{center} + $c->{step};
+    $c->{slowrev} //= $c->{center} - $c->{step};
     #$c->{cmd}     //= 'W';
     $c->{cmd} //= 'Z';
     $self->servo_attach( $c->{pin} ) unless $c->{no_attach};
-    $self->servo_cmd($name,  $c->{center}) unless $c->{no_center};
-    
+    $self->servo_value($name,  $c->{center}) unless $c->{no_center};
+    $c->{last}    //= $c->{center};
     $c->{init}->($self, $c) if ref $c->{init} eq 'CODE';
     return $self->{servo}{$name};
 }
 
-sub servo_cmd {
+sub servo_v {
     my $self = shift if ref $_[0];
     my ($name, $value) = @_;
-    my $c = $self->{servo}{$name};
+    my $c = ref $name ? $name : $self->{servo}{$name};
+    unless ($value) {
+#warn("r1($value)[$c->{last}]"),
+        $value = $c->{last} ;
+    } elsif ($value > 1 or $value < -1) {    
+        #warn("r2[$value]"),
+    #$value = $value ;
+    } elsif ($value > 0) {
+#warn("r3[$c->{center} + ($c->{max}-$c->{center}) * $value = ",($c->{center} + ($c->{max}-$c->{center}) * $value),"]"),
+        $value= $c->{center} + ($c->{max}-$c->{center}) * $value ;
+    } elsif ($value < 0) {
+#warn("r4[$c->{center} + ($c->{center}-$c->{min}) * $value = ",$c->{center} + ($c->{center}-$c->{min}) * $value,"]"),
+        $value = $c->{center} + ($c->{center}-$c->{min}) * $value ;
+    }
     $value = $c->{max} if $value > $c->{max};
     $value = $c->{min} if $value < $c->{min};
-    return $self->cmd($c->{cmd}, $c->{pin}, $c->{last} = int $value);
+    return int $value;
+}
+
+sub servo_value {
+    my $self = shift if ref $_[0];
+    my ($name, $value) = @_;
+    my $c = ref $name ? $name : $self->{servo}{$name};
+    return $c->{last} unless defined $value;
+    return $self->cmd($c->{cmd}, $c->{pin}, $c->{last} = $self->servo_v($c, $value));
+}
+
+sub servo_add {
+    my $self = shift if ref $_[0];
+    my ($name, $value) = @_;
+    my $c = ref $name ? $name : $self->{servo}{$name};
+    my $l = $c->{last};
+    $l = ($c->{last} - $c->{center}) / $c->{max} if $value > -1 and $value < 1;
+warn "last=$c->{last}  l=$l  v=$value";
+    $self->servo_value($c, $self->servo_v($c, $l + $value));
 }
 
 sub parse ($) {
