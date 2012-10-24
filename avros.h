@@ -271,7 +271,7 @@
 #if SERVO
 #include "Servo.h"
 Servo servo[SERVO];
-char servon[PIN_LAST + 1];
+char servon[PIN_LAST + 1] = {};
 char servolast = 0;
 //Servo *  servos[PIN_LAST] = {};
 #endif
@@ -477,7 +477,7 @@ void pulseOut(byte pin, unsigned int us)
 byte servo_attach(byte pin)
 {
     pinMode(pin, OUTPUT);
-    servon[pin] = servolast++;
+    if (!servon[pin]) servon[pin] = servolast++;
     if(servo[servon[pin]].attached()) {
         servo[servon[pin]].detach();
     }
@@ -730,18 +730,31 @@ int cmd_parse(int cmd)
             break;
 #endif
 #if SERVO
-        case 'Z':
+        case 'y':
             pin = read_pin();
             servo_attach(pin);
+#if REPORT
+            Serial.print("y");
+            print_pin_sep(pin);
+            Serial.print(servo[servon[pin]].attached(), DEC);
+            Serial.println(servon[pin], DEC);
+            //    Serial.println(servos[pin]->attached(), DEC);
+#endif
+            break;
+        case 'Z':
+            pin = read_pin();
+            value = read_num(3);
+            //servo_attach(pin);
             /*	if (!servos[pin]) {
              Servo servo;
              		servos[pin] = &servo;
              		servos[pin]->attach(pin);
              	}*/
+            servo[servon[pin]].write(value);
 #if REPORT
             Serial.print("Z");
             print_pin_sep(pin);
-            Serial.print(servo[servon[pin]].attached(), DEC);
+            Serial.print(value, DEC);
             Serial.println(servon[pin], DEC);
             //    Serial.println(servos[pin]->attached(), DEC);
 #endif

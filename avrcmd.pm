@@ -170,10 +170,10 @@ sub open (;$) {
   $@ = undef;
   if ( $^O =~ /^(ms)?win/i and use_try 'Win32::SerialPort' ) {
     $self->{port} = Win32::SerialPort->new( $self->{path} );    # unless $@;
-    warn "not opened [$self->{path}] [$@]" unless $self->{port};
+    warn "not opened [$self->{path}] [$@] [$!]" unless $self->{port};
   } elsif ( !$self->{port} and use_try 'Device::SerialPort' ) {
     $self->{port} = Device::SerialPort->new( $self->{path} );    # unless $@;
-    warn "not opened [$self->{path}] [$@]" unless $self->{port};
+    warn "not opened [$self->{path}] [$@] [$!]" unless $self->{port};
   } else {
     warn 'no good lib [ Device::SerialPort Win32::SerialPort ]';
   }
