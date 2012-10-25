@@ -85,6 +85,7 @@ sub debug (@) {
 sub check () {
   my $self = shift if ref $_[0];
   #$self->debug('chk run', caller 3);
+  return if $self->{emulate};
   if ( !$self->{port} ) {    # or !exists $self->{'inited'}
     if ( !$self->port_try( $self->{wait} ) and $self->{path} ) {
       delete $self->{path};
@@ -123,6 +124,7 @@ sub check () {
 sub read(;$) {
   my $self = shift if ref $_[0];
   return if $self->check();
+  return if $self->{emulate};
   my $end = time + $_[0];
   my $ret;
   do {
@@ -138,6 +140,7 @@ sub read(;$) {
 
 sub say(;$) {
   my $self = shift if ref $_[0];
+  return if $self->{emulate};
   my $end = time + $_[0];
   my $ret;
   local $_;
@@ -151,6 +154,7 @@ sub say(;$) {
 sub write (@) {
   my $self = shift if ref $_[0];
   $self->debug("write [@_]");
+  return if $self->{emulate};
   return if $self->check();
   $self->{port}->write( join '', @_ );
 }
@@ -168,7 +172,7 @@ sub open (;$) {
 #warn("sleep$_[0]"),
   sleep $_[0] if $_[0];
   $@ = undef;
-  if ( $^O =~ /^(ms)?win/i and use_try 'Win32::SerialPort' ) {
+  if ($^O =~ /^(ms)?win/i and use_try 'Win32::SerialPort' ) {
     $self->{port} = Win32::SerialPort->new( $self->{path} );    # unless $@;
     warn "not opened [$self->{path}] [$@] [$!]" unless $self->{port};
   } elsif ( !$self->{port} and use_try 'Device::SerialPort' ) {
@@ -426,10 +430,10 @@ sub servo_v {
     #$value = $value ;
     } elsif ($value > 0) {
 #warn("r3[$c->{center} + ($c->{max}-$c->{center}) * $value = ",($c->{center} + ($c->{max}-$c->{center}) * $value),"]"),
-        $value= $c->{center} + ($c->{max}-$c->{center}) * $value ;
+        $value = $c->{center} + ($c->{max}-$c->{center}) * $value * ($c->{reverse}?-1:1);
     } elsif ($value < 0) {
 #warn("r4[$c->{center} + ($c->{center}-$c->{min}) * $value = ",$c->{center} + ($c->{center}-$c->{min}) * $value,"]"),
-        $value = $c->{center} + ($c->{center}-$c->{min}) * $value ;
+        $value = $c->{center} + ($c->{center}-$c->{min}) * $value * ($c->{reverse}?-1:1);
     }
     $value = $c->{max} if $value > $c->{max};
     $value = $c->{min} if $value < $c->{min};
@@ -450,7 +454,7 @@ sub servo_add {
     my $c = ref $name ? $name : $self->{servo}{$name};
     my $l = $c->{last};
     $l = ($c->{last} - $c->{center}) / $c->{max} if $value > -1 and $value < 1;
-warn "last=$c->{last}  l=$l  v=$value";
+#warn "last=$c->{last}  l=$l  v=$value";
     $self->servo_value($c, $self->servo_v($c, $l + $value));
 }
 
@@ -476,7 +480,7 @@ unless (caller) {
     my $port = __PACKAGE__->new(
       #'baudrate'=>9600,
       debug => 1, waitinit => 1,
-      #path=>'COM1',
+      #path=>'COM2',
     ) or return;
     #print("[$_]"),
     $port->write( $_ . ' ' ), $port->say for @ARGV;
