@@ -381,17 +381,22 @@ sub monitor ($$) {
 
 sub servo_attach($) {
   my $self = shift if ref $_[0];
-  $self->cmd( 'y', @_ );
+  $self->cmd( 'xsa', @_ );
 }
 
 sub servo_read($) {
   my $self = shift if ref $_[0];
-  $self->cmd( 'z', @_ );
+  $self->cmd( 'xsr', @_ );
 }
 
 sub servo_write($$) {
   my $self = shift if ref $_[0];
-  $self->cmd( 'Z', @_ );
+  $self->cmd( 'xsw', @_ );
+}
+
+sub servo_writeMicroseconds($$) {
+  my $self = shift if ref $_[0];
+  $self->cmd( 'xsW', @_ );
 }
 
 sub servo_new {
@@ -410,7 +415,7 @@ sub servo_new {
     $c->{slow}    //= $c->{center} + $c->{step};
     $c->{slowrev} //= $c->{center} - $c->{step};
     #$c->{cmd}     //= 'W';
-    $c->{cmd} //= 'Z';
+    $c->{cmd} //= 'xsw';
     $self->servo_attach( $c->{pin} ) unless $c->{no_attach};
     $self->servo_value($name,  $c->{center}) unless $c->{no_center};
     $c->{last}    //= $c->{center};
