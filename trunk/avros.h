@@ -88,10 +88,13 @@
  v
  wP,B	digitalWrite(pin, value) value: HIGH=1 or LOW=0
  WP,V	analogWrite(pin, value) - PWM  values from 0 to 255
- x
- yP	servo attach    to use #define SERVO 1
- zP	servo read
- ZP,V	servo write
+ x      modules mode
+ xs     servo module
+ xsaP	servo attach    to use #define SERVO 1
+ xsdP	servo detach
+ xsrP	servo read
+ xswP,V	servo write
+ xswP,V	servo writeMicroseconds
 
 
  you can split multiplie commands by space, \n or tab, or input without spaces
@@ -175,6 +178,7 @@
  interrupts() noInterrupts()
  finish binary values/pins
  execute commands from string
+ module eprom - e=>xer, E=>xew
  */
 #if !defined(avros_h)
 #define avros_h
@@ -478,6 +482,7 @@ byte servo_attach(byte pin)
 {
     pinMode(pin, OUTPUT);
     if (!servon[pin]) servon[pin] = servolast++;
+    if (servolast >= SERVO) servolast = 0;
     if(servo[servon[pin]].attached()) {
         servo[servon[pin]].detach();
     }
@@ -729,44 +734,65 @@ int cmd_parse(int cmd)
 #endif
             break;
 #endif
+
+        case 'x': //modules
+            cmd = read_chr();
+            switch (cmd) {
 #if SERVO
-        case 'y':
+        case 's': //servo
+            cmd = read_chr();
+            switch (cmd) {
+
+        case 'a':
             pin = read_pin();
             servo_attach(pin);
 #if REPORT
-            Serial.print("y");
+            Serial.print("xsa");
             print_pin_sep(pin);
             Serial.print(servo[servon[pin]].attached(), DEC);
             Serial.println(servon[pin], DEC);
             //    Serial.println(servos[pin]->attached(), DEC);
 #endif
             break;
-        case 'Z':
+        case 'd':
             pin = read_pin();
-            value = read_num(3);
-            //servo_attach(pin);
-            /*	if (!servos[pin]) {
-             Servo servo;
-             		servos[pin] = &servo;
-             		servos[pin]->attach(pin);
-             	}*/
-            servo[servon[pin]].write(value);
+            if (servo[servon[pin]].attached()) servo[servon[pin]].detach();
 #if REPORT
-            Serial.print("Z");
+            Serial.print("xsd");
             print_pin_sep(pin);
-            Serial.print(value, DEC);
-            Serial.println(servon[pin], DEC);
+            Serial.print(servo[servon[pin]].attached(), DEC);
+            //Serial.println(servon[pin], DEC);
             //    Serial.println(servos[pin]->attached(), DEC);
 #endif
             break;
-        case 'z':
+        case 'w':
             pin = read_pin();
             value = read_num(3);
-            //    value = char2bin(read_chr());
             servo[servon[pin]].write(value);
-            //    servos[pin]->write(value);
 #if REPORT
-            Serial.print("z");
+            Serial.print("xsw");
+            print_pin_sep(pin);
+            Serial.print(value, DEC);
+            //Serial.println(servon[pin], DEC);
+#endif
+            break;
+        case 'W':
+            pin = read_pin();
+            value = read_num(3);
+            servo[servon[pin]].writeMicroseconds(value);
+#if REPORT
+            Serial.print("xsW");
+            print_pin_sep(pin);
+            Serial.print(value, DEC);
+            //Serial.println(servon[pin], DEC);
+#endif
+            break;
+
+        case 'r':
+            pin = read_pin();
+            value = servo[servon[pin]].read();
+#if REPORT
+            Serial.print("xsr");
             //    Serial.print(servon[pin], DEC);
             print_pin_sep(pin);
             Serial.print(servon[pin], DEC);
@@ -774,7 +800,12 @@ int cmd_parse(int cmd)
             //    Serial.println(servos[pin]->read(), DEC);
 #endif
             break;
-#endif
+        }
+        break;
+#endif //SERVO
+        }
+        break;
+
         default:
             return cmd;
     }
