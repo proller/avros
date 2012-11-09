@@ -106,7 +106,7 @@ sub check () {
   }
   if ( $self->{waitinit} and !$self->{'inited'} ) {
     schedule(
-      { wait => 10, every => 10 },
+      { wait => 20, every => 20 },
       our $___report ||= sub {
         my $self = shift if ref $_[0];
         #dmp "no init, findnextport[$self->{'inited'}]", $self;
@@ -146,6 +146,7 @@ sub say(;$) {
   local $_;
   do {
     $ret .= ( $_ = $self->read(@_) );
+    #warn "R[$_]";
     print $_, "\n" if length $_;
   } while time < $end;
   return $ret;
@@ -186,7 +187,7 @@ sub open (;$) {
   $self->{port}->databits( $self->{'databits'} //= 8 );
   $self->{port}->parity( $self->{'parity'}     //= 'none' );
   $self->{port}->stopbits( $self->{'stopbits'} //= 1 );
-  #$self->debug("port opts [$self->{'baudrate'}]  $self->{'databits'} $self->{'parity'} ");
+  $self->debug("port opts [$self->{'baudrate'}]  $self->{'databits'} $self->{'parity'} ");
   return $self->{port};
 }
 
@@ -197,7 +198,9 @@ sub port_try {
   for my $path (
       $self->{path}
     ? $self->{path}
-    : sort { $self->{ports}{$a} <=> $self->{ports}{$b} || $b cmp $a }
+    : 
+    grep {$_} $self->{port_last},
+    sort { $self->{ports}{$a} <=> $self->{ports}{$b} || $b cmp $a }
     keys %{ $self->{ports} || {} }
     )
   {
@@ -208,8 +211,10 @@ sub port_try {
     next unless $self->{path};
     $self->debug("selected port [$self->{path}] [$^O]");
     $self->open();
+
     if ( $self->{port} ) {
       next unless $self->init();
+      $self->{port_last} = $self->{port};
       return $self->{port};
     }
   }
@@ -278,7 +283,7 @@ sub init () {
   }
   return unless $self->{port};
   if ( $self->{'waitinit'} ) {
-    my $n = 10;
+    my $n = 20;
     $self->debug("waiting init ($n)..");
     local $SIG{INT} = sub { $n = -1; };
     local $| = 1;
@@ -405,8 +410,8 @@ sub servo_new {
     $c = $name, $name = undef if ref $name and !$c;
     $name //= $c->{pin};
     $self->{servo}{$name} = $c;
-    $c->{start}   //= $c->{min} // 64;
-    $c->{end}     //= $c->{max} // 250;
+    $c->{start}   //= $c->{min} // 0;
+    $c->{end}     //= $c->{max} // 180;
     $c->{max}     //= $c->{end}; #$c->{center} + $c->{start};
     $c->{min}     //= $c->{start};
     $c->{trim}    //= 0;
@@ -484,7 +489,8 @@ unless (caller) {
     local $| = 1;
     my $port = __PACKAGE__->new(
       #'baudrate'=>9600,
-      debug => 1, waitinit => 1,
+      debug => 1, 
+      waitinit => 1,
       #path=>'COM2',
     ) or return;
     #print("[$_]"),
