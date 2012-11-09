@@ -95,6 +95,8 @@
  xsrP	servo read
  xswP,V	servo write
  xswP,V	servo writeMicroseconds
+ y
+ z
 
 
  you can split multiplie commands by space, \n or tab, or input without spaces
