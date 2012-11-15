@@ -10,7 +10,7 @@ use strict;
 use Data::Dumper;
 #use Time::HiRes;
 use lib::abs qw(..);
-use avrcmd;
+use avros;
 #my $pin  = 3;
 our @pin;    #    = ( 3 .. 10 );
 our %action = ();
@@ -18,7 +18,7 @@ do +lib::abs::path('') . '/button.config.pl';
 warn "in conf: $@" if $@;
 #warn Dumper \@pin, \%action;
 @pin = sort keys %action;
-my $port = avrcmd->new(
+my $port = avros->new(
   #'baudrate'=>9600,
   debug    => 1,
   waitinit => 1,
@@ -35,7 +35,7 @@ my $port = avrcmd->new(
   },
   init => sub {
     my $port = shift if ref $_[0];
-    $port->pinMode( $_, avrcmd::OUTPUT ), $port->monitor( $_, 1 ) for @pin;
+    $port->pinMode( $_, avros::OUTPUT ), $port->monitor( $_, 1 ) for @pin;
     $port->say(2);    #wait for monitor answers
   },
 ) or die;
