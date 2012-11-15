@@ -301,6 +301,10 @@ int  serial_buf = -1;
 #if !defined(MONITOR_LAST)
 #define MONITOR_LAST PIN_LAST
 #endif
+#if !defined(MONITOR_PULSE)
+#define MONITOR_PULSE HIGH
+#endif
+
 int  monitor_pin[MONITOR_LAST + 1] = { // using arduino 0018 or earlier  possible error, to fix: #define PIN_LAST 21
 };
 int  monitor_last[MONITOR_LAST + 1] = {
@@ -344,7 +348,8 @@ void monitor()
         //#endif
         if (monitor_pin[i]) {
             int    now;
-            if (i < PIN_ANALOG_FROM)  now = digitalRead(i);
+            if (i < PIN_ANALOG_FROM and monitor_pin[i] > 1)  now = pulseIn(i, MONITOR_PULSE);
+            else if (i < PIN_ANALOG_FROM)  now = digitalRead(i);
             else  now = analogRead(i - PIN_ANALOG_FROM);
             if (monitor_last[i] >=    now + monitor_pin[i] or monitor_last[i] <= now - monitor_pin[i]) {
                 monitor_last[i]               = now;
@@ -762,7 +767,7 @@ int cmd_parse(int cmd)
 #if REPORT
             Serial.print("xsd");
             print_pin_sep(pin);
-            Serial.print(servo[servon[pin]].attached(), DEC);
+            Serial.println(servo[servon[pin]].attached(), DEC);
             //Serial.println(servon[pin], DEC);
             //    Serial.println(servos[pin]->attached(), DEC);
 #endif
@@ -774,7 +779,7 @@ int cmd_parse(int cmd)
 #if REPORT
             Serial.print("xsw");
             print_pin_sep(pin);
-            Serial.print(value, DEC);
+            Serial.println(value, DEC);
             //Serial.println(servon[pin], DEC);
 #endif
             break;
@@ -785,7 +790,7 @@ int cmd_parse(int cmd)
 #if REPORT
             Serial.print("xsW");
             print_pin_sep(pin);
-            Serial.print(value, DEC);
+            Serial.println(value, DEC);
             //Serial.println(servon[pin], DEC);
 #endif
             break;

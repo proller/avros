@@ -3,9 +3,9 @@
 
 =example
 
-perl avrcmd.pm . d1000 w13,0 d500 w13,1
+perl avros.pm . d1000 w13,0 d500 w13,1
 
-perl avrcmd.pm + + + M0,1 M1,1 - - - .
+perl avros.pm + + + M0,1 M1,1 - - - .
 
 
 =INSTALL
@@ -23,7 +23,7 @@ mode COM1 BAUD=115200 PARITY=n DATA=8 STOP=1
 =cut
 
 #our %config;
-package avrcmd;
+package avros;
 use strict;
 no strict qw(refs);
 use warnings;
@@ -32,6 +32,10 @@ use Time::HiRes qw(time sleep);
 use Data::Dumper;
 $Data::Dumper::Sortkeys = $Data::Dumper::Useqq = $Data::Dumper::Terse = 1;
 $Data::Dumper::Indent = 0;
+
+#todo exportok HIGH LOW INPUT OUTPUT 
+
+
 #our $port;
 #my @porttry;
 #my $portpath;
